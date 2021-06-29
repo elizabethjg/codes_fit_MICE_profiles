@@ -7,6 +7,7 @@ from fit_profiles_curvefit import *
 from multiprocessing import Pool
 from multiprocessing import Process
 import astropy.units as u
+import pandas as pd
 part = '8_5'
 cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 
