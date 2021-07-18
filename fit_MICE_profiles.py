@@ -8,19 +8,19 @@ from multiprocessing import Pool
 from multiprocessing import Process
 import astropy.units as u
 import pandas as pd
-part = '8_5'
+part = '3_3'
 cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 
 # hn = fits.open('../catalogs/halo_props/halo_props2_'+part+'_2_main_plus.fits')[1].data.Halo_number
 # zhalos = fits.open('../catalogs/halo_props/halo_props2_'+part+'_2_main_plus.fits')[1].data.z_v
 # profiles = np.loadtxt('../catalogs/halo_props/halo_props2_'+part+'.csv_profile.bz2',skiprows=1,delimiter=',')
 
-ncores = 32
+ncores = 56
 # haloid = fits.open('../catalogs/halo_props/halo_props2_'+part+'_plus.fits')[1].data['unique_halo_id']
-main = pd.read_csv('../catalogs/halo_props/halo_props2_8_5_4_main.csv.bz2') 
-profiles = np.loadtxt('../catalogs/halo_props/halo_props2_'+part+'_4_pro.csv.bz2',skiprows=1,delimiter=',')
+main = pd.read_csv('../catalogs/halo_props/halo_props2_'+part+'_main.csv.bz2') 
+profiles = np.loadtxt('../catalogs/halo_props/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
 hn = np.array(main.Halo_number)
-Dh = np.sqrt(main.xc_fof**2 + main.yc_fof**2 + main.zc_fof**2)/1000.
+Dh = np.sqrt(main.xc_rc**2 + main.yc_rc**2 + main.zc_rc**2)/1000.
 
 # mid = np.in1d(profiles[:,0],hn)
 
@@ -31,7 +31,7 @@ mp = 2.927e10
 # zhalos = np.ones(profiles.shape[0])*1.3
 # haloid = profiles[:,0]
 
-nrings = 20
+nrings = 10
 
 index = np.arange(len(profiles))
 
@@ -193,5 +193,5 @@ primary_hdu = fits.PrimaryHDU()
 hdul = fits.HDUList([primary_hdu,tbhdu])
 
 # hdul.writeto('../catalogs/halo_props/fitted_mass_'+part+'.fits',overwrite=True)
-hdul.writeto('../catalogs/halo_props/fitted_mass_'+part+'_4.fits',overwrite=True)
+hdul.writeto('../catalogs/halo_props/fitted_mass_'+part+'.fits',overwrite=True)
 # '''
