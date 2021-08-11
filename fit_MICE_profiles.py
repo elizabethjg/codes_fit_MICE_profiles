@@ -8,28 +8,20 @@ from multiprocessing import Pool
 from multiprocessing import Process
 import astropy.units as u
 import pandas as pd
-part = '3_3'
+part = '4_4'
 cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 
 # hn = fits.open('../catalogs/halo_props/halo_props2_'+part+'_2_main_plus.fits')[1].data.Halo_number
 # zhalos = fits.open('../catalogs/halo_props/halo_props2_'+part+'_2_main_plus.fits')[1].data.z_v
 # profiles = np.loadtxt('../catalogs/halo_props/halo_props2_'+part+'.csv_profile.bz2',skiprows=1,delimiter=',')
 
-ncores = 56
-# haloid = fits.open('../catalogs/halo_props/halo_props2_'+part+'_plus.fits')[1].data['unique_halo_id']
-main = pd.read_csv('../catalogs/halo_props/halo_props2_'+part+'_main.csv.bz2') 
-profiles = np.loadtxt('../catalogs/halo_props/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
-hn = np.array(main.Halo_number)
-Dh = np.sqrt(main.xc_rc**2 + main.yc_rc**2 + main.zc_rc**2)/1000.
-
-# mid = np.in1d(profiles[:,0],hn)
+ncores = 32
+main = pd.read_csv('/home/elizabeth/lightconedir_129/halo_props2_'+part+'_main.csv.bz2') 
+profiles = np.loadtxt('/home/elizabeth/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
 
 mp = 2.927e10
+zhalos = main.z_halo
 
-# profiles = profiles[mid,:]
-
-# zhalos = np.ones(profiles.shape[0])*1.3
-# haloid = profiles[:,0]
 
 nrings = 10
 
@@ -37,26 +29,19 @@ index = np.arange(len(profiles))
 
 avance = np.linspace(0,len(profiles)/ncores,10)
 
-def fit_profile(pro,dh,plot=False):
-
-         z = z_at_value(cosmo.comoving_distance, dh * u.Mpc, zmax=2.0)  
+def fit_profile(pro,z,plot=False):
     
-         rbins = (np.arange(nrings+1)*(pro[1]/float(nrings)))/1000
-         r = (rbins[:-1] + np.diff(rbins)/2.)
-         
-         # mr = (r < 0.7*(pro[1]/1000.))*(r > r[1])
+         r   = pro[2:2+nrings]/1.e3
          mr = r > 0.
          
          mpV = mp/((4./3.)*np.pi*(rbins[1:]**3 - rbins[:-1]**3)) # mp/V
          
-         rho   = pro[2:2+nrings][mr]
-         rho_E = pro[2+nrings:2+2*nrings][mr]
-         S     = pro[2+2*nrings:2+3*nrings][mr]
-         S_E   = pro[2+3*nrings:][mr]
+         rho   = pro[2+nrings:2+2*nrings][mr]
+         rho_E = pro[2+2*nrings:2+3*nrings][mr]
+         S     = pro[2+3*nrings:2+4*nrings][mr]
+         S_E   = pro[2+4*nrings:][mr]
 
          r      = r[mr]
-
-         erho = np.ones(mr.sum())*100.
 
          mrho = rho > 0.
          mS = S > 0.
@@ -110,7 +95,7 @@ def fit_profile(pro,dh,plot=False):
                  plt.close('all')
              
              
-             return [z,np.log10(rho_f.M200),rho_f.c200,
+             return [np.log10(rho_f.M200),rho_f.c200,
                      np.log10(rho_E_f.M200),rho_E_f.c200,
                      np.log10(S_f.M200),S_f.c200,
                      np.log10(S_E_f.M200),S_E_f.c200]
@@ -123,7 +108,7 @@ def fit_profile(pro,dh,plot=False):
 def run_fit_profile(index):
     
     
-    output_fits = np.zeros((len(index),9))
+    output_fits = np.zeros((len(index),8))
     
     a = '='
     
@@ -131,7 +116,7 @@ def run_fit_profile(index):
         j = index[i]
         if j in avance:
             print(a)
-        output_fits[i] = fit_profile(profiles[j],Dh[j])
+        output_fits[i] = fit_profile(profiles[j],zhalos[j])
         a += '='
         
     return output_fits
@@ -152,7 +137,6 @@ salida = pool.map(run_fit_profile, np.array(index_splitted).T)
 pool.terminate()
 
 M_r = []
-zhalos = []
 M_re = []
 M_S = []
 M_Se = []
@@ -165,19 +149,17 @@ for fitted in salida:
     
     fitted = fitted.T
     
-    zhalos  = np.append(zhalos,fitted[0])
-    M_r  = np.append(M_r,fitted[1])
-    M_re = np.append(M_re,fitted[3])
-    M_S  = np.append(M_S,fitted[5])
-    M_Se = np.append(M_Se,fitted[7])
-    c_r  = np.append(c_r,fitted[2]) 
-    c_re = np.append(c_re,fitted[4])
-    c_S  = np.append(c_S ,fitted[6])
-    c_Se = np.append(c_Se,fitted[8])
+    M_r  = np.append(M_r,fitted[0])
+    M_re = np.append(M_re,fitted[2])
+    M_S  = np.append(M_S,fitted[3])
+    M_Se = np.append(M_Se,fitted[6])
+    c_r  = np.append(c_r,fitted[1]) 
+    c_re = np.append(c_re,fitted[3])
+    c_S  = np.append(c_S ,fitted[5])
+    c_Se = np.append(c_Se,fitted[7])
     
 
 table = [fits.Column(name='halo_id', format='E', array=hn),
-             fits.Column(name='zhalo', format='E', array=zhalos),
              fits.Column(name='lM200_rho', format='E', array=M_r),
              fits.Column(name='c200_rho', format='E', array=c_r),
              fits.Column(name='lM200_rho_E', format='E', array=M_re),

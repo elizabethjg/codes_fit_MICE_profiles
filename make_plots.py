@@ -8,15 +8,14 @@ from multiprocessing import Pool
 from multiprocessing import Process
 import astropy.units as u
 import pandas as pd
-part = '8_5'
 cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 
-part = '8_5'
+part = '3_2'
 
-main = pd.read_csv('../catalogs/halo_props/halo_props2_8_5_4_main.csv.bz2') 
-profiles = np.loadtxt('../catalogs/halo_props/halo_props2_'+part+'_4_pro.csv.bz2',skiprows=1,delimiter=',')
-masses = fits.open('../catalogs/halo_props/fitted_mass_'+part+'_4.fits')[1].data
-zhalos = masses.zhalo
+main = pd.read_csv('/home/elizabeth/lightconedir_129/halo_props2_'+part+'_main.csv.bz2') 
+profiles = np.loadtxt('/home/elizabeth/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
+# masses = fits.open('../catalogs/halo_props/fitted_mass_'+part+'.fits')[1].data
+zhalos = main.z_halo
 
 rc = np.sqrt((main.xc_fof - main.xc_rc)**2 + (main.yc_fof - main.yc_rc)**2 + (main.zc_fof - main.zc_rc)**2)
 
@@ -63,22 +62,17 @@ def fit_profile(pro,z,plot=True):
     
          nrings = 10
          mp = 2.927e10
-         rbins = (np.arange(nrings+1)*(pro[1]/float(nrings)))/1000
-         r = (rbins[:-1] + np.diff(rbins)/2.)
-         
-         # mr = (r < 0.7*(pro[1]/1000.))*(r > r[1])
+         r   = pro[2:2+nrings]/1.e3
          mr = r > 0.
          
          mpV = mp/((4./3.)*np.pi*(rbins[1:]**3 - rbins[:-1]**3)) # mp/V
          
-         rho   = pro[2:2+nrings][mr]
-         rho_E = pro[2+nrings:2+2*nrings][mr]
-         S     = pro[2+2*nrings:2+3*nrings][mr]
-         S_E   = pro[2+3*nrings:][mr]
+         rho   = pro[2+nrings:2+2*nrings][mr]
+         rho_E = pro[2+2*nrings:2+3*nrings][mr]
+         S     = pro[2+3*nrings:2+4*nrings][mr]
+         S_E   = pro[2+4*nrings:][mr]
 
          r      = r[mr]
-
-         erho = np.ones(mr.sum())*100.
 
          mrho = rho > 0.
          mS = S > 0.
@@ -155,24 +149,36 @@ def fit_profile(pro,z,plot=True):
     # S_E   = np.append(S_E,out[4])
     
 
-s = main.c3D_mod/main.a3D_mod
-q = main.b2D_mod/main.a2D_mod
-sr = main.c3Dr_mod/main.a3Dr_mod
-qr = main.b2Dr_mod/main.a2Dr_mod
+s = main.c3D/main.a3D
+q = main.b2D/main.a2D
+sr = main.c3Dr/main.a3Dr
+qr = main.b2Dr/main.a2Dr
 
 
 index = np.arange(len(s))
 
 mrelax = (rc/main.r_max < 0.05)
 
-m = main.lMfof > 13.0
+
 
 j = index[mrelax*(q < 0.4)*(main.lMfof > 13.5)][6]
 
 fit_profile(profiles[j],zhalos[j])
 
+k2 = (main.EKin)
+u2 = (main.EPot)
 
-
+m = (main.lgMfof > 12.5)#*mrelax
+plt.figure()
+plt.plot(zhalos[~m],((2.*k2)/abs(u2))[~m],',',alpha=0.5,zorder=1)
+plt.scatter(zhalos[m],((2.*k2)/abs(u2))[m],c=(rc/main.r_max)[m],alpha=0.3,s=20,vmax=0.3,zorder=2)
+# plt.plot(zhalos[m],Eratio[m],',')
+plt.xlabel('$z$')
+plt.ylabel('$(2K)/U$')
+plt.ylim([0.5,3])
+plt.axhline(1.35)
+plt.colorbar()
+plt.savefig(plots_path+'Eratio_'+part+'.png')
 
 plt.figure()
 plt.scatter(zhalos[m],10**(masses.lM200_rho - main.lMfof)[m],c=(rc/main.r_max)[m],alpha=0.3,s=20,vmax=0.3)
@@ -202,7 +208,7 @@ plt.colorbar()
 plt.savefig(plots_path+'M_comparison_3D_elliptical_'+part+'.png')
 
 plt.figure()
-plt.scatter(q[m],10**(masses.lM200_rho-masses.lM200_rho_E)[m],c=(rc/main.r_max)[m],alpha=0.3,s=20,vmax=0.3)
+plt.scatter(q[m],10**(masses.lM200_S-masses.lM200_S_E)[m],c=(rc/main.r_max)[m],alpha=0.3,s=20,vmax=0.3)
 plt.xlabel('$q=b/a$')
 plt.ylabel('$M^{2D}_{200}/M^{2D}_{200E}$')
 plt.ylim([0,3])
@@ -220,7 +226,7 @@ plt.colorbar()
 plt.savefig(plots_path+'c200_comparison_3D_elliptical_'+part+'.png')
 
 plt.figure()
-plt.scatter(q[m],(masses.c200_rho/masses.c200_rho_E)[m],c=(rc/main.r_max)[m],alpha=0.3,s=20,vmax=0.3)
+plt.scatter(q[m],(masses.c200_S/masses.c200_S_E)[m],c=(rc/main.r_max)[m],alpha=0.3,s=20,vmax=0.3)
 plt.xlabel('$q=b/a$')
 plt.ylabel('$c^{2D}_{200}/c^{2D}_{200E})$')
 plt.ylim([-0.5,6])
