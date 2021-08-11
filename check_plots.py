@@ -80,8 +80,8 @@ index = np.arange(len(s))
 mrelax = (rc/main.r_max < 0.05)
 
 
-k2 = (main.EKin)
-u2 = (main.EPot)
+k2 = (main.Ekin)
+u2 = (main.Epot)
 
 m = (main.lgM > 12.5)#*mrelax
 plt.figure()
