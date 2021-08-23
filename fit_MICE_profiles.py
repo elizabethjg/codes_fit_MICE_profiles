@@ -16,8 +16,8 @@ cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 # profiles = np.loadtxt('../catalogs/halo_props/halo_props2_'+part+'.csv_profile.bz2',skiprows=1,delimiter=',')
 
 ncores = 32
-main = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2')[:100]
-profiles = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')[:100]
+main = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2')
+profiles = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
 
 mp = 2.927e10
 zhalos = main.redshift
@@ -143,7 +143,7 @@ for fitted in salida[1:]:
     
 hn = main['column_halo_id']
 
-output = np.colum_stack(hn,output)
+output = np.column_stack(hn,output)
     
 out_file = '/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass.csv.bz2'
 
