@@ -16,11 +16,11 @@ cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 # profiles = np.loadtxt('../catalogs/halo_props/halo_props2_'+part+'.csv_profile.bz2',skiprows=1,delimiter=',')
 
 ncores = 32
-main = pd.read_csv('/home/elizabeth/lightconedir_129/halo_props2_'+part+'_main.csv.bz2') 
-profiles = np.loadtxt('/home/elizabeth/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
+main = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2')[:100]
+profiles = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')[:100]
 
 mp = 2.927e10
-zhalos = main.z_halo
+zhalos = main.redshift
 
 
 nrings = 10
@@ -31,18 +31,16 @@ avance = np.linspace(0,len(profiles)/ncores,10)
 
 def fit_profile(pro,z,plot=False):
     
-         r   = pro[2:2+nrings]/1.e3
-         mr = r > 0.
+         r   = pro[2:2+nrings]/1.e3         
          
+         rbins = (np.arange(nrings+1)*(pro[1]/float(nrings)))/1000
          mpV = mp/((4./3.)*np.pi*(rbins[1:]**3 - rbins[:-1]**3)) # mp/V
          
-         rho   = pro[2+nrings:2+2*nrings][mr]
-         rho_E = pro[2+2*nrings:2+3*nrings][mr]
-         S     = pro[2+3*nrings:2+4*nrings][mr]
-         S_E   = pro[2+4*nrings:][mr]
-
-         r      = r[mr]
-
+         rho   = pro[2+nrings:2+2*nrings]
+         rho_E = pro[2+2*nrings:2+3*nrings]
+         S     = pro[2+3*nrings:2+4*nrings]
+         S_E   = pro[2+4*nrings:]
+         
          mrho = rho > 0.
          mS = S > 0.
          mrhoe = rho_E > 0.
@@ -95,20 +93,20 @@ def fit_profile(pro,z,plot=False):
                  plt.close('all')
              
              
-             return [np.log10(rho_f.M200),rho_f.c200,
-                     np.log10(rho_E_f.M200),rho_E_f.c200,
-                     np.log10(S_f.M200),S_f.c200,
-                     np.log10(S_E_f.M200),S_E_f.c200]
+             return [np.log10(rho_f.M200),rho_f.c200,rho_f.chi2,
+                     np.log10(rho_E_f.M200),rho_E_f.c200,rho_E_f.chi2,
+                     np.log10(S_f.M200),S_f.c200,S_f.chi2,
+                     np.log10(S_E_f.M200),S_E_f.c200,S_E_f.chi2]
          
          else:
              
-             return np.zeros(9)
+             return np.zeros(12)
                  
 
 def run_fit_profile(index):
     
     
-    output_fits = np.zeros((len(index),8))
+    output_fits = np.zeros((len(index),12))
     
     a = '='
     
@@ -136,44 +134,19 @@ pool = Pool(processes=(ncores))
 salida = pool.map(run_fit_profile, np.array(index_splitted).T)
 pool.terminate()
 
-M_r = []
-M_re = []
-M_S = []
-M_Se = []
-c_r = []
-c_re = []
-c_S = []
-c_Se = []
+output = salida[0]
 
-for fitted in salida:
+for fitted in salida[1:]:
     
-    fitted = fitted.T
     
-    M_r  = np.append(M_r,fitted[0])
-    M_re = np.append(M_re,fitted[2])
-    M_S  = np.append(M_S,fitted[3])
-    M_Se = np.append(M_Se,fitted[6])
-    c_r  = np.append(c_r,fitted[1]) 
-    c_re = np.append(c_re,fitted[3])
-    c_S  = np.append(c_S ,fitted[5])
-    c_Se = np.append(c_Se,fitted[7])
+    output  = np.vstack((output,fitted))
     
+hn = main['column_halo_id']
 
-table = [fits.Column(name='halo_id', format='E', array=hn),
-             fits.Column(name='lM200_rho', format='E', array=M_r),
-             fits.Column(name='c200_rho', format='E', array=c_r),
-             fits.Column(name='lM200_rho_E', format='E', array=M_re),
-             fits.Column(name='c200_rho_E', format='E', array=c_re),
-             fits.Column(name='lM200_S', format='E', array=M_S),
-             fits.Column(name='c200_S', format='E', array=c_S),
-             fits.Column(name='lM200_S_E', format='E', array=M_Se),
-             fits.Column(name='c200_S_E', format='E', array=c_Se)]
-             
-tbhdu = fits.BinTableHDU.from_columns(fits.ColDefs(table))
-primary_hdu = fits.PrimaryHDU()
+output = np.colum_stack(hn,output)
+    
+out_file = '/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass.csv.bz2'
 
-hdul = fits.HDUList([primary_hdu,tbhdu])
+head = 'column_halo_id,lgM200_rho,c200_rho,chi2_rho,lgM200_rho_E,c200_rho_E,chi2_rho_E,lgM200_S,c200_S,chi2_S,lgM200_S_E,c200_S_E,chi2_S_E'
 
-# hdul.writeto('../catalogs/halo_props/fitted_mass_'+part+'.fits',overwrite=True)
-hdul.writeto('../catalogs/halo_props/fitted_mass_'+part+'.fits',overwrite=True)
-# '''
+np.savetxt(out_file,output,fmt=['%10d']+['%5.2f']*12,header=head,comments='',delimiter=',')

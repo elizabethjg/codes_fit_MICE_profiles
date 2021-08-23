@@ -10,11 +10,11 @@ import astropy.units as u
 import pandas as pd
 cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 
-part = '3_2'
+part = '4_4'
 
 main = pd.read_csv('/home/elizabeth/lightconedir_129/halo_props2_'+part+'_main.csv.bz2') 
 profiles = np.loadtxt('/home/elizabeth/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
-# masses = fits.open('../catalogs/halo_props/fitted_mass_'+part+'.fits')[1].data
+masses = fits.open('/home/elizabeth/lightconedir_129/fitted_mass_'+part+'.fits')[1].data
 zhalos = main.z_halo
 
 rc = np.sqrt((main.xc_fof - main.xc_rc)**2 + (main.yc_fof - main.yc_rc)**2 + (main.zc_fof - main.zc_rc)**2)
@@ -63,17 +63,16 @@ def fit_profile(pro,z,plot=True):
          nrings = 10
          mp = 2.927e10
          r   = pro[2:2+nrings]/1.e3
-         mr = r > 0.
          
+         
+         rbins = (np.arange(nrings+1)*(pro[1]/float(nrings)))/1000
          mpV = mp/((4./3.)*np.pi*(rbins[1:]**3 - rbins[:-1]**3)) # mp/V
          
-         rho   = pro[2+nrings:2+2*nrings][mr]
-         rho_E = pro[2+2*nrings:2+3*nrings][mr]
-         S     = pro[2+3*nrings:2+4*nrings][mr]
-         S_E   = pro[2+4*nrings:][mr]
-
-         r      = r[mr]
-
+         rho   = pro[2+nrings:2+2*nrings]
+         rho_E = pro[2+2*nrings:2+3*nrings]
+         S     = pro[2+3*nrings:2+4*nrings]
+         S_E   = pro[2+4*nrings:]
+         
          mrho = rho > 0.
          mS = S > 0.
          mrhoe = rho_E > 0.
@@ -88,23 +87,26 @@ def fit_profile(pro,z,plot=True):
              S_E_f      = Sigma_fit(r[S_E>0],S_E[S_E>0],np.sqrt(mpV/S_E)[S_E>0],z,cosmo,True)
              
              if plot:
-             
-                 f,ax = plt.subplots()
-                 f2,ax2 = plt.subplots()
+
                  
                  m = rho_f.xplot > r.min()
                  m1 = rho_E_f.xplot >  r.min()
                  m2 = S_f.xplot >  r.min()
                  m3 = S_E_f.xplot >  r.min()
              
-             
+                 f,ax = plt.subplots()
+                 ax.plot(r,rho,'C7o',lw=2)
                  ax.plot(r,rho,'C7',lw=2)
                  ax.plot(rho_f.xplot[m],rho_f.yplot[m],'k')
+                 ax.plot(r,rho_E,'C7x',lw=2)
                  ax.plot(r,rho_E,'C7--',lw=2)
                  ax.plot(rho_E_f.xplot[m1],rho_E_f.yplot[m1],'k--')
                  
+                 f2,ax2 = plt.subplots()                 
                  ax2.plot(r,S,'C7',lw=2)
+                 ax2.plot(r,S,'C7o',lw=2)
                  ax2.plot(r,S_E,'C7--',lw=2)
+                 ax2.plot(r,S_E,'C7x',lw=2)
                  ax2.plot(S_f.xplot[m2],S_f.yplot[m2],'k')
                  ax2.plot(S_E_f.xplot[m3],S_E_f.yplot[m3],'k--')
              
@@ -161,7 +163,7 @@ mrelax = (rc/main.r_max < 0.05)
 
 
 
-j = index[mrelax*(q < 0.4)*(main.lMfof > 13.5)][6]
+j = index[mrelax*(q < 0.4)*(main.lgMfof > 13.5)][6]
 
 fit_profile(profiles[j],zhalos[j])
 
@@ -181,7 +183,7 @@ plt.colorbar()
 plt.savefig(plots_path+'Eratio_'+part+'.png')
 
 plt.figure()
-plt.scatter(zhalos[m],10**(masses.lM200_rho - main.lMfof)[m],c=(rc/main.r_max)[m],alpha=0.3,s=20,vmax=0.3)
+plt.scatter(zhalos[m],10**(masses.lM200_rho - main.lgMfof)[m],c=(rc/main.r_max)[m],alpha=0.3,s=5,vmax=0.3)
 plt.xlabel('$z$')
 plt.ylabel('$M_{200}/M_{FOF}$')
 plt.ylim([0,1.2])
@@ -190,7 +192,7 @@ plt.colorbar()
 plt.savefig(plots_path+'M_comparison_3D_'+part+'.png')
 
 plt.figure()
-plt.scatter(zhalos[m],10**(masses.lM200_S - main.lMfof)[m],c=(rc/main.r_max)[m],alpha=0.3,s=20,vmax=0.3)
+plt.scatter(zhalos[m],10**(masses.lM200_S - main.lgMfof)[m],c=(rc/main.r_max)[m],alpha=0.3,s=20,vmax=0.3)
 plt.xlabel('$z$')
 plt.ylim([0,1.2])
 plt.ylabel('$M^{2D}_{200}/M_{FOF}$')
