@@ -143,7 +143,7 @@ for fitted in salida[1:]:
     
 hn = main['column_halo_id']
 
-output = np.column_stack(hn,output)
+output = np.column_stack((hn,output))
     
 out_file = '/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass.csv.bz2'
 
