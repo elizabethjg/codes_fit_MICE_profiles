@@ -16,11 +16,17 @@ cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 # profiles = np.loadtxt('../catalogs/halo_props/halo_props2_'+part+'.csv_profile.bz2',skiprows=1,delimiter=',')
 
 ncores = 32
-main = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2')
-profiles = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
+main0 = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2')
+profiles0 = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
+
+# j = np.random.uniform(0,len(profiles),100000).astype(int)
+j = np.argsort(np.array(main0.lgM))[-10000:]
+main = main0.loc[j]
+profiles = profiles0[j]
+
 
 mp = 2.927e10
-zhalos = main.redshift
+zhalos = np.array(main.redshift)
 
 
 nrings = 10
@@ -31,82 +37,100 @@ avance = np.linspace(0,len(profiles)/ncores,10)
 
 def fit_profile(pro,z,plot=False):
     
+         # roc_mpc = cosmo.critical_density(z).to(u.Msun/(u.Mpc)**3).value
+     
          r   = pro[2:2+nrings]/1.e3         
          
          rbins = (np.arange(nrings+1)*(pro[1]/float(nrings)))/1000
          mpV = mp/((4./3.)*np.pi*(rbins[1:]**3 - rbins[:-1]**3)) # mp/V
+         mpA = mp/(np.pi*(rbins[1:]**2 - rbins[:-1]**3)) # mp/A
+         
+
          
          rho   = pro[2+nrings:2+2*nrings]
          rho_E = pro[2+2*nrings:2+3*nrings]
          S     = pro[2+3*nrings:2+4*nrings]
          S_E   = pro[2+4*nrings:]
+
+         # Vsum = (4./3.)*np.pi*(rbins[1:]**3)
+         # Msum = np.cumsum(rho/mpV)*mp
+         # mr200 = (Msum/Vsum) > 200.*roc_mpc
          
          mrho = rho > 0.
-         mS = S > 0.
+         mS = (S > 0.)*(r < 0.7*pro[1]*1.e-3)
          mrhoe = rho_E > 0.
-         mSe = S_E > 0.
-
+         mSe = (S_E > 0.)*(r < 0.7*pro[1]*1.e-3)
          
-         if mrho.sum() > 0. and mS.sum() > 0. and mrhoe.sum() > 0. and mSe.sum() > 0.:
          
-             rho_f    = rho_fit(r[rho>0],rho[rho>0],np.sqrt(mpV/rho)[rho>0],z,cosmo,True)
-             rho_E_f    = rho_fit(r[rho_E>0],rho_E[rho_E>0],np.sqrt(mpV/rho_E)[rho_E>0],z,cosmo,True)
-             S_f      = Sigma_fit(r[S>0],S[S>0],np.sqrt(mpV/S)[S>0],z,cosmo,True)
-             S_E_f      = Sigma_fit(r[S_E>0],S_E[S_E>0],np.sqrt(mpV/S_E)[S_E>0],z,cosmo,True)
-             
-             if plot:
-             
-                 f,ax = plt.subplots()
-                 f2,ax2 = plt.subplots()
-                 
-                 m = rho_f.xplot > r.min()
-                 m1 = rho_E_f.xplot >  r.min()
-                 m2 = S_f.xplot >  r.min()
-                 m3 = S_E_f.xplot >  r.min()
-             
-             
-                 ax.plot(r,rho,'C7',lw=2)
-                 ax.plot(rho_f.xplot[m],rho_f.yplot[m],'k')
-                 ax.plot(r,rho_E,'C7--',lw=2)
-                 ax.plot(rho_E_f.xplot[m1],rho_E_f.yplot[m1],'k--')
-                 
-                 ax2.plot(r,S,'C7',lw=2)
-                 ax2.plot(r,S_E,'C7--',lw=2)
-                 ax2.plot(S_f.xplot[m2],S_f.yplot[m2],'k')
-                 ax2.plot(S_E_f.xplot[m3],S_E_f.yplot[m3],'k--')
-             
-                 ax.set_xscale('log')
-                 ax.set_yscale('log')
-                 ax2.set_xscale('log')
-                 ax2.set_yscale('log')
-                 ax.set_ylabel(r'$\rho [M_\odot h^2/Mpc^3]$')
-                 ax.set_xlabel('$r[Mpc/h]$')
-                 ax2.set_ylabel(r'$\Sigma [M_\odot h/Mpc^2]$')
-                 ax2.set_xlabel('$R[Mpc/h]$')
-             
-             
-                 print(0.7*(pro[1]/1000.))
-                 print(np.log10(rho_f.M200),rho_f.c200)
-             
-                 input("Press Enter to continue...")
-             
-                 plt.close('all')
-             
-             
-             return [np.log10(rho_f.M200),rho_f.c200,rho_f.chi2,
-                     np.log10(rho_E_f.M200),rho_E_f.c200,rho_E_f.chi2,
-                     np.log10(S_f.M200),S_f.c200,S_f.chi2,
-                     np.log10(S_E_f.M200),S_E_f.c200,S_E_f.chi2]
+         # error = 1.e12*np.ones(len(r))
          
-         else:
+         rho_f    = rho_fit(r[mrho],rho[mrho],mpV[mrho],z,cosmo,True)
+         rho_E_f    = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z,cosmo,True)
+         S_f      = Sigma_fit(r[mS],S[mS],mpA[mS],z,cosmo,True)
+         S_E_f      = Sigma_fit(r[mSe],S_E[mSe],mpA[mSe],z,cosmo,True)
+         # rho_f    = rho_fit(r[rho>0],rho[rho>0],np.sqrt(mpV/rho)[rho>0],z,cosmo,True)
+         # rho_E_f    = rho_fit(r[rho_E>0],rho_E[rho_E>0],np.sqrt(mpV/rho_E)[rho_E>0],z,cosmo,True)
+         # S_f      = Sigma_fit(r[S>0],S[S>0],np.sqrt(mpV/S)[S>0],z,cosmo,True)
+         # S_E_f      = Sigma_fit(r[S_E>0],S_E[S_E>0],np.sqrt(mpV/S_E)[S_E>0],z,cosmo,True)
+         
+         if plot:
              
-             return np.zeros(12)
-                 
+             
+             m = rho_f.xplot > r.min()
+             m1 = rho_E_f.xplot >  r.min()
+             m2 = S_f.xplot >  r.min()
+             m3 = S_E_f.xplot >  r.min()
+             
+         
+             f,ax = plt.subplots()                              
+             ax.fill_between(r,rho+mpV*0.5,rho-mpV*0.5,color='C0',alpha=0.5)
+             ax.plot(r,rho,'C7',lw=2)
+             ax.plot(rho_f.xplot[m],rho_f.yplot[m],'k')
+             ax.fill_between(r,rho_E+mpV*0.5,rho_E-mpV*0.5,color='C1',alpha=0.5)
+             ax.plot(r,rho_E,'C7--',lw=2)
+             ax.plot(rho_E_f.xplot[m1],rho_E_f.yplot[m1],'k--')
+             
+             
+             f2,ax2 = plt.subplots()                 
+             ax2.fill_between(r,S+mpA*0.5,S-mpA*0.5,color='C0',alpha=0.5)
+             ax2.plot(r,S,'C7',lw=2)
+             ax2.fill_between(r,S_E+mpA*0.5,S_E-mpA*0.5,color='C1',alpha=0.5)
+             ax2.plot(r,S_E,'C7--',lw=2)
+             ax2.plot(S_f.xplot[m2],S_f.yplot[m2],'k')
+             ax2.plot(S_E_f.xplot[m3],S_E_f.yplot[m3],'k--')
+         
+             ax.set_xscale('log')
+             ax.set_yscale('log')
+             ax2.set_xscale('log')
+             ax2.set_yscale('log')
+             ax.set_ylabel(r'$\rho [M_\odot h^2/Mpc^3]$')
+             ax.set_xlabel('$r[Mpc/h]$')
+             ax2.set_ylabel(r'$\Sigma [M_\odot h/Mpc^2]$')
+             ax2.set_xlabel('$R[Mpc/h]$')
+         
+         
+             print(0.7*(pro[1]/1000.))
+             print(np.log10(rho_f.M200),rho_f.c200)
+         
+             input("Press Enter to continue...")
+         
+             plt.close('all')
+         
+         
+         return [np.log10(rho_f.M200),rho_f.error_M200/(rho_f.M200*np.log(10.)),
+                 rho_f.c200,rho_f.error_c200,mrho.sum(),
+                 np.log10(rho_E_f.M200),rho_E_f.error_M200/(rho_E_f.M200*np.log(10.)),
+                 rho_E_f.c200,rho_E_f.error_c200,mrhoe.sum(),
+                 np.log10(S_f.M200),S_f.error_M200/(S_f.M200*np.log(10.)),
+                 S_f.c200,S_f.error_c200,mS.sum(),
+                 np.log10(S_E_f.M200),S_E_f.error_M200/(S_E_f.M200*np.log(10.)),
+                 S_E_f.c200,S_E_f.error_c200,mSe.sum()]
+                          
 
 def run_fit_profile(index):
     
     
-    output_fits = np.zeros((len(index),12))
+    output_fits = np.zeros((len(index),20))
     
     a = '='
     
@@ -147,6 +171,6 @@ output = np.column_stack((hn,output))
     
 out_file = '/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass.csv.bz2'
 
-head = 'column_halo_id,lgM200_rho,c200_rho,chi2_rho,lgM200_rho_E,c200_rho_E,chi2_rho_E,lgM200_S,c200_S,chi2_S,lgM200_S_E,c200_S_E,chi2_S_E'
+head = 'column_halo_id,lgM200_rho,e_lgM200_rho,c200_rho,e_c200_rho,nb_rho,lgM200_rho_E,e_lgM200_rho_E,c200_rho_E,e_c200_rho_E,nb_rho_E,lgM200_S,e_lgM200_S,c200_S,e_c200_S,nb_S,lgM200_S_E,e_lgM200_S_E,c200_S_E,c200_S_E,nb_S_E'
 
-np.savetxt(out_file,output,fmt=['%10d']+['%5.2f']*12,header=head,comments='',delimiter=',')
+np.savetxt(out_file,output,fmt=['%10d']+['%5.2f']*20,header=head,comments='',delimiter=',')

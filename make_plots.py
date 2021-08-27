@@ -17,7 +17,7 @@ profiles = np.loadtxt('/home/elizabeth/lightconedir_129/halo_props2_'+part+'_pro
 masses = fits.open('/home/elizabeth/lightconedir_129/fitted_mass_'+part+'.fits')[1].data
 zhalos = main.z_halo
 
-rc = np.sqrt((main.xc_fof - main.xc_rc)**2 + (main.yc_fof - main.yc_rc)**2 + (main.zc_fof - main.zc_rc)**2)
+rc = np.array(np.sqrt((main.xc - main.xc_rc)**2 + (main.yc - main.yc_rc)**2 + (main.zc - main.zc_rc)**2))
 
 plots_path = '/home/elizabeth/plots/'
 
@@ -167,10 +167,10 @@ j = index[mrelax*(q < 0.4)*(main.lgMfof > 13.5)][6]
 
 fit_profile(profiles[j],zhalos[j])
 
-k2 = (main.EKin)
-u2 = (main.EPot)
+k2 = np.array(main.Ekin)
+u2 = np.array(main.Epot)
 
-m = (main.lgMfof > 12.5)#*mrelax
+m = (main.lgM > 1.)#*mrelax
 plt.figure()
 plt.plot(zhalos[~m],((2.*k2)/abs(u2))[~m],',',alpha=0.5,zorder=1)
 plt.scatter(zhalos[m],((2.*k2)/abs(u2))[m],c=(rc/main.r_max)[m],alpha=0.3,s=20,vmax=0.3,zorder=2)
@@ -183,55 +183,55 @@ plt.colorbar()
 plt.savefig(plots_path+'Eratio_'+part+'.png')
 
 plt.figure()
-plt.scatter(zhalos[m],10**(masses.lM200_rho - main.lgMfof)[m],c=(rc/main.r_max)[m],alpha=0.3,s=5,vmax=0.3)
+plt.scatter(zhalos,np.array(10**(masses2.lgM200_rho - np.array(main.lgM))),c=(rc/main.r_max),alpha=0.3,s=5,vmax=0.3)
 plt.xlabel('$z$')
 plt.ylabel('$M_{200}/M_{FOF}$')
 plt.ylim([0,1.2])
 plt.axhline(1)
 plt.colorbar()
-plt.savefig(plots_path+'M_comparison_3D_'+part+'.png')
+plt.savefig(plots_path+'M_comparison_3D_'+part+'_2.png')
 
 plt.figure()
-plt.scatter(zhalos[m],10**(masses.lM200_S - main.lgMfof)[m],c=(rc/main.r_max)[m],alpha=0.3,s=20,vmax=0.3)
+plt.scatter(zhalos,np.array(10**(masses2.lgM200_S - np.array(main.lgM))),c=(rc/main.r_max),alpha=0.3,s=5,vmax=0.3)
 plt.xlabel('$z$')
 plt.ylim([0,1.2])
 plt.ylabel('$M^{2D}_{200}/M_{FOF}$')
 plt.axhline(1)
 plt.colorbar()
-plt.savefig(plots_path+'M_comparison_2D_'+part+'.png')
+plt.savefig(plots_path+'M_comparison_2D_'+part+'_2.png')
 
 plt.figure()
-plt.scatter(s[m],10**(masses.lM200_rho - masses.lM200_rho_E)[m],c=(rc/main.r_max)[m],alpha=0.3,s=20,vmax=0.3)
+plt.scatter(s,10**(masses2.lgM200_rho - masses2.lgM200_rho_E),c=(rc/main.r_max),alpha=0.3,s=5,vmax=0.3)
 plt.xlabel('$S=c/a$')
 plt.ylabel('$M_{200}/M_{200E}$')
 plt.ylim([0,3])
 plt.axhline(1)
 plt.colorbar()
-plt.savefig(plots_path+'M_comparison_3D_elliptical_'+part+'.png')
+plt.savefig(plots_path+'M_comparison_3D_elliptical_'+part+'_2.png')
 
 plt.figure()
-plt.scatter(q[m],10**(masses.lM200_S-masses.lM200_S_E)[m],c=(rc/main.r_max)[m],alpha=0.3,s=20,vmax=0.3)
+plt.scatter(q,10**(masses2.lgM200_S-masses2.lgM200_S_E),c=(rc/main.r_max),alpha=0.3,s=5,vmax=0.3)
 plt.xlabel('$q=b/a$')
 plt.ylabel('$M^{2D}_{200}/M^{2D}_{200E}$')
 plt.ylim([0,3])
 plt.axhline(1)
 plt.colorbar()
-plt.savefig(plots_path+'M_comparison_2D_elliptical_'+part+'.png')
+plt.savefig(plots_path+'M_comparison_2D_elliptical_'+part+'_2.png')
 
 plt.figure()
-plt.scatter(s[m],(masses.c200_rho/masses.c200_rho_E)[m],c=(rc/main.r_max)[m],alpha=0.3,s=20,vmax=0.3)
+plt.scatter(s,(masses2.c200_rho/masses2.c200_rho_E),c=(rc/main.r_max),alpha=0.3,s=5,vmax=0.3)
 plt.xlabel('$S=c/a$')
 plt.ylabel('$c_{200}/c_{200E}$')
 plt.ylim([-0.5,6])
 plt.axhline(1)
 plt.colorbar()
-plt.savefig(plots_path+'c200_comparison_3D_elliptical_'+part+'.png')
+plt.savefig(plots_path+'c200_comparison_3D_elliptical_'+part+'_2.png')
 
 plt.figure()
-plt.scatter(q[m],(masses.c200_S/masses.c200_S_E)[m],c=(rc/main.r_max)[m],alpha=0.3,s=20,vmax=0.3)
+plt.scatter(q,(masses2.c200_S/masses2.c200_S_E),c=(rc/main.r_max),alpha=0.3,s=5,vmax=0.3)
 plt.xlabel('$q=b/a$')
 plt.ylabel('$c^{2D}_{200}/c^{2D}_{200E})$')
 plt.ylim([-0.5,6])
 plt.axhline(1)
 plt.colorbar()
-plt.savefig(plots_path+'c200_comparison_2D_elliptical_'+part+'.png')
+plt.savefig(plots_path+'c200_comparison_2D_elliptical_'+part+'_2.png')
