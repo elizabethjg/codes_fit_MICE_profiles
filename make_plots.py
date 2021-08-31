@@ -12,51 +12,15 @@ cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 
 part = '4_4'
 
-main = pd.read_csv('/home/elizabeth/lightconedir_129/halo_props2_'+part+'_main.csv.bz2') 
-profiles = np.loadtxt('/home/elizabeth/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
-masses = fits.open('/home/elizabeth/lightconedir_129/fitted_mass_'+part+'.fits')[1].data
-zhalos = main.z_halo
+main = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2') 
+profiles = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
+masses = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass.csv.bz2') 
+zhalos = main.redshift
 
 rc = np.array(np.sqrt((main.xc - main.xc_rc)**2 + (main.yc - main.yc_rc)**2 + (main.zc - main.zc_rc)**2))
 
 plots_path = '/home/elizabeth/plots/'
 
-
-def q_75(y):
-    return np.quantile(y, 0.75)
-
-def q_25(y):
-    return np.quantile(y, 0.25)
-
-def binned(x,y,nbins=10):
-    
-    
-    bined = stats.binned_statistic(x,y,statistic='median', bins=nbins)
-    x_b = 0.5*(bined.bin_edges[:-1] + bined.bin_edges[1:])
-    q50     = bined.statistic
-    
-    bined = stats.binned_statistic(x,y,statistic=q_25, bins=nbins)
-    q25     = bined.statistic
-
-    bined = stats.binned_statistic(x,y,statistic=q_75, bins=nbins)
-    q75     = bined.statistic
-    
-    dig   = np.digitize(x,bined.bin_edges)
-    mz    = np.ones(len(x))
-    for j in range(nbins):
-        mbin = dig == (j+1)
-        mz[mbin] = y[mbin] >= q50[j]   
-    mz = mz.astype(bool)
-    return x_b,q50,q25,q75,mz
-            
-
-def plot_fig(x,y,nbins,ax=plt,color = 'sienna', style = '',label=''):
-                
-        X,q50,q25,q75,mz = binned(x,y,nbins)
-        ax.plot(X,q50,style,color=color,label=label)
-        ax.plot(X,q75,style,color=color,alpha=0.2)
-        ax.plot(X,q25,style,color=color,alpha=0.2)
-        ax.fill_between(X,q75,q25,color = color,alpha=0.1)
         
 def fit_profile(pro,z,plot=True):
     
@@ -134,28 +98,38 @@ def fit_profile(pro,z,plot=True):
              
              return np.zeros(9)
                  
-# r     = []
-# rho   = []
-# rho_E = []
-# S     = []
-# S_E   = []
+lMrho   = np.array(masses.lgM200_rho).astype(float)
+lMrhoE  = np.array(masses.lgM200_rho_E).astype(float)
+elMrho  = np.array(masses.e_lgM200_rho).astype(float)
+elMrhoE = np.array(masses.e_lgM200_rho_E).astype(float)
 
+crho   = np.array(masses.c200_rho).astype(float)
+crhoE  = np.array(masses.c200_rho_E).astype(float)
+ecrho  = np.array(masses.e_c200_rho).astype(float)
+ecrhoE = np.array(masses.e_c200_rho_E).astype(float)
 
-# for j in range(len(zhalos)):
+lMS     = np.array(masses.lgM200_S).astype(float)
+lMSE    = np.array(masses.lgM200_S_E).astype(float)
+elMS    = np.array(masses.e_lgM200_S).astype(float)
+elMSE   = np.array(masses.e_lgM200_S_E).astype(float)
+
+cS     = np.array(masses.c200_S).astype(float)
+cSE    = np.array(masses.c200_S_E).astype(float)
+ecS    = np.array(masses.e_c200_S).astype(float)
+ecSE   = np.array(masses['c200_S_E.1']).astype(float)
+
+mrho   = (elMrho/lMrho < 0.5)*(ecrho/crho < 0.5)
+mrhoE  = (elMrhoE/lMrhoE < 0.5)*(ecrhoE/crhoE < 0.5)
+mS      = (elMS/lMS < 0.5)*(ecS/cS < 0.5)
+mSE     = (elMSE/lMSE < 0.5)*(ecSE/cSE < 0.5)
     
-    # out = fit_profile(profiles[j],zhalos[j])
-    # r     = np.append(r,out[0])
-    # rho   = np.append(rho,out[1])
-    # rho_E = np.append(rho_E,out[2])
-    # S     = np.append(S,out[3])
-    # S_E   = np.append(S_E,out[4])
-    
 
-s = main.c3D/main.a3D
-q = main.b2D/main.a2D
-sr = main.c3Dr/main.a3Dr
-qr = main.b2Dr/main.a2Dr
-
+s    = main.c3D/main.a3D
+q    = main.b3D/main.a3D
+q2d  = main.b2D/main.a2D
+sr   = main.c3Dr/main.a3Dr
+qr   = main.b3Dr/main.a3Dr
+q2dr = main.b2Dr/main.a2Dr
 
 index = np.arange(len(s))
 
@@ -163,75 +137,187 @@ mrelax = (rc/main.r_max < 0.05)
 
 
 
-j = index[mrelax*(q < 0.4)*(main.lgMfof > 13.5)][6]
+j = index[mrelax*(q < 0.4)*(main.lgM > 13.5)][6]
 
-fit_profile(profiles[j],zhalos[j])
+# fit_profile(profiles[j],zhalos[j])
 
 k2 = np.array(main.Ekin)
 u2 = np.array(main.Epot)
 
-m = (main.lgM > 1.)#*mrelax
+mrelax2 = ((2.*k2)/abs(u2)) < 1.35
+
+mcut = (main.lgM > 12.5)#*mrelax
+lmcut = 'M125'
+
+m = mcut
+
 plt.figure()
-plt.plot(zhalos[~m],((2.*k2)/abs(u2))[~m],',',alpha=0.5,zorder=1)
-plt.scatter(zhalos[m],((2.*k2)/abs(u2))[m],c=(rc/main.r_max)[m],alpha=0.3,s=20,vmax=0.3,zorder=2)
-# plt.plot(zhalos[m],Eratio[m],',')
+plt.scatter(zhalos[m],((2.*k2)/abs(u2))[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3,zorder=2)
 plt.xlabel('$z$')
 plt.ylabel('$(2K)/U$')
 plt.ylim([0.5,3])
 plt.axhline(1.35)
 plt.colorbar()
-plt.savefig(plots_path+'Eratio_'+part+'.png')
+plt.savefig(plots_path+'Eratio_'+part+'_'+lmcut+'.png')
+
 
 plt.figure()
-plt.scatter(zhalos,np.array(10**(masses2.lgM200_rho - np.array(main.lgM))),c=(rc/main.r_max),alpha=0.3,s=5,vmax=0.3)
+plt.scatter(sr[m],s[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3,zorder=2)
+plt.xlabel('$s_r$')
+plt.ylabel('$s$')
+plt.colorbar()
+plt.savefig(plots_path+'s_'+part+'_'+lmcut+'.png')
+
+plt.figure()
+plt.scatter(qr[m],q[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3,zorder=2)
+plt.xlabel('$q_r$')
+plt.ylabel('$q$')
+plt.colorbar()
+plt.savefig(plots_path+'q_'+part+'_'+lmcut+'.png')
+
+plt.figure()
+plt.scatter(q2dr[m],q2d[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3,zorder=2)
+plt.xlabel('$q2d_r$')
+plt.ylabel('$q2d$')
+plt.colorbar()
+plt.savefig(plots_path+'q2d_'+part+'_'+lmcut+'.png')
+
+m = mrho*mcut
+plt.figure()
+plt.scatter(zhalos[m],10**(lMrho[m] - np.array(main.lgM)[m]),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$z$')
 plt.ylabel('$M_{200}/M_{FOF}$')
 plt.ylim([0,1.2])
 plt.axhline(1)
 plt.colorbar()
-plt.savefig(plots_path+'M_comparison_3D_'+part+'_2.png')
+plt.savefig(plots_path+'M_comparison_3D_'+part+'_'+lmcut+'.png')
 
+m = mS*mcut
 plt.figure()
-plt.scatter(zhalos,np.array(10**(masses2.lgM200_S - np.array(main.lgM))),c=(rc/main.r_max),alpha=0.3,s=5,vmax=0.3)
+plt.scatter(zhalos[m],np.array(10**(lMS[m] - np.array(main.lgM)[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$z$')
 plt.ylim([0,1.2])
 plt.ylabel('$M^{2D}_{200}/M_{FOF}$')
 plt.axhline(1)
 plt.colorbar()
-plt.savefig(plots_path+'M_comparison_2D_'+part+'_2.png')
+plt.savefig(plots_path+'M_comparison_2D_'+part+'_'+lmcut+'.png')
 
+m = (mrho*mrhoE)*mcut
 plt.figure()
-plt.scatter(s,10**(masses2.lgM200_rho - masses2.lgM200_rho_E),c=(rc/main.r_max),alpha=0.3,s=5,vmax=0.3)
+plt.scatter(s[m],np.array(10**(lMrho[m] - lMrhoE[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$S=c/a$')
 plt.ylabel('$M_{200}/M_{200E}$')
 plt.ylim([0,3])
 plt.axhline(1)
 plt.colorbar()
-plt.savefig(plots_path+'M_comparison_3D_elliptical_'+part+'_2.png')
+plt.savefig(plots_path+'M_comparison_3D_elliptical_'+part+'_'+lmcut+'.png')
 
 plt.figure()
-plt.scatter(q,10**(masses2.lgM200_S-masses2.lgM200_S_E),c=(rc/main.r_max),alpha=0.3,s=5,vmax=0.3)
-plt.xlabel('$q=b/a$')
-plt.ylabel('$M^{2D}_{200}/M^{2D}_{200E}$')
-plt.ylim([0,3])
-plt.axhline(1)
-plt.colorbar()
-plt.savefig(plots_path+'M_comparison_2D_elliptical_'+part+'_2.png')
-
-plt.figure()
-plt.scatter(s,(masses2.c200_rho/masses2.c200_rho_E),c=(rc/main.r_max),alpha=0.3,s=5,vmax=0.3)
+plt.scatter(s[m],(crho/crhoE)[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$S=c/a$')
 plt.ylabel('$c_{200}/c_{200E}$')
 plt.ylim([-0.5,6])
 plt.axhline(1)
 plt.colorbar()
-plt.savefig(plots_path+'c200_comparison_3D_elliptical_'+part+'_2.png')
+plt.savefig(plots_path+'c200_comparison_3D_elliptical_'+part+'_'+lmcut+'.png')
+
+
+m = (mS*mSE)*mcut
+plt.figure()
+plt.scatter(q[m],np.array(10**(lMS[m] - lMSE[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.xlabel('$q=b/a$')
+plt.ylabel('$M^{2D}_{200}/M^{2D}_{200E}$')
+plt.ylim([0,3])
+plt.axhline(1)
+plt.colorbar()
+plt.savefig(plots_path+'M_comparison_2D_elliptical_'+part+'_'+lmcut+'.png')
+
 
 plt.figure()
-plt.scatter(q,(masses2.c200_S/masses2.c200_S_E),c=(rc/main.r_max),alpha=0.3,s=5,vmax=0.3)
+plt.scatter(q[m],(cS/cSE)[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$q=b/a$')
-plt.ylabel('$c^{2D}_{200}/c^{2D}_{200E})$')
+plt.ylabel('$c^{2D}_{200}/c^{2D}_{200E}$')
 plt.ylim([-0.5,6])
 plt.axhline(1)
 plt.colorbar()
-plt.savefig(plots_path+'c200_comparison_2D_elliptical_'+part+'_2.png')
+plt.savefig(plots_path+'c200_comparison_2D_elliptical_'+part+'_'+lmcut+'.png')
+
+
+m = (mrho*mS)*mcut
+plt.figure()
+plt.scatter(s[m],np.array(10**(lMrho[m] - lMS[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.xlabel('$S=c/a$')
+plt.ylabel('$M_{200}/M^{2D}_{200}$')
+plt.ylim([0,3])
+plt.axhline(1)
+plt.colorbar()
+plt.savefig(plots_path+'M_comparison_project_'+part+'_'+lmcut+'.png')
+
+plt.figure()
+plt.scatter(s[m],(crho/cS)[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.xlabel('$S=c/a$')
+plt.ylabel('$c_{200}/c^{2D}_{200}$')
+plt.ylim([-0.5,6])
+plt.axhline(1)
+plt.colorbar()
+plt.savefig(plots_path+'c200_comparison_project_'+part+'_'+lmcut+'.png')
+
+m = (mrhoE*mSE)*mcut
+plt.figure()
+plt.scatter(s[m],np.array(10**(lMrhoE[m] - lMSE[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.xlabel('$S=c/a$')
+plt.ylabel('$M_{200}/M^{2D}_{200}$')
+plt.ylim([0,3])
+plt.axhline(1)
+plt.colorbar()
+plt.savefig(plots_path+'M_comparison_project_ellip_'+part+'_'+lmcut+'.png')
+
+plt.figure()
+plt.scatter(s[m],(crhoE/cSE)[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.xlabel('$S=c/a$')
+plt.ylabel('$c_{200}/c^{2D}_{200}$')
+plt.ylim([-0.5,6])
+plt.axhline(1)
+plt.colorbar()
+plt.savefig(plots_path+'c200_comparison_project_ellip_'+part+'_'+lmcut+'.png')
+
+
+plt.figure()
+plt.hist((ecrho/crho)[mcut],np.linspace(0,0.2,50),histtype='step',density=True,color='C0')
+plt.hist((ecrho/crho)[mcut*mrelax],np.linspace(0,0.2,50),histtype='step',density=True,label='relaxed',color='C1')
+plt.legend()
+plt.hist((ecS/cS)[mcut],np.linspace(0,0.2,50),histtype='step',density=True,lw=2,color='C0')
+plt.hist((ecS/cS)[mcut*mrelax],np.linspace(0,0.2,50),histtype='step',density=True,label='relaxed',lw=2,color='C1')
+plt.xlabel('$N$')
+plt.ylabel('$\epsilon_{c_{200}}$')
+plt.savefig(plots_path+'epsilon_c200_'+part+'_'+lmcut+'.png')
+
+plt.figure()
+plt.hist((elMrho/lMrho)[mcut],np.linspace(0,0.004,50),histtype='step',density=True,color='C0')
+plt.hist((elMrho/lMrho)[mcut*mrelax],np.linspace(0,0.004,50),histtype='step',density=True,label='relaxed',color='C1')
+plt.legend()
+plt.hist((elMS/lMS)[mcut],np.linspace(0,0.004,50),histtype='step',density=True,lw=2,color='C0')
+plt.hist((elMS/lMS)[mcut*mrelax],np.linspace(0,0.004,50),histtype='step',density=True,label='relaxed',lw=2,color='C1')
+plt.xlabel('$N$')
+plt.ylabel('$\epsilon_{M_{200}}$')
+plt.savefig(plots_path+'epsilon_M200_'+part+'_'+lmcut+'.png')
+
+plt.figure()
+plt.hist((ecrhoE/crhoE)[mcut],np.linspace(0,0.2,50),histtype='step',density=True,color='C0')
+plt.hist((ecrhoE/crhoE)[mcut*mrelax],np.linspace(0,0.2,50),histtype='step',density=True,label='relaxed',color='C1')
+plt.legend()
+plt.hist((ecSE/cSE)[mcut],np.linspace(0,0.2,50),histtype='step',density=True,lw=2,color='C0')
+plt.hist((ecSE/cSE)[mcut*mrelax],np.linspace(0,0.2,50),histtype='step',density=True,label='relaxed',lw=2,color='C1')
+plt.xlabel('$N$')
+plt.ylabel('$\epsilon_{c_{200}}$')
+plt.savefig(plots_path+'epsilon_c200_ellip_'+part+'_'+lmcut+'.png')
+
+plt.figure()
+plt.hist((elMrhoE/lMrhoE)[mcut],np.linspace(0,0.02,50),histtype='step',density=True,color='C0')
+plt.hist((elMrhoE/lMrhoE)[mcut*mrelax],np.linspace(0,0.02,50),histtype='step',density=True,label='relaxed',color='C1')
+plt.legend()
+plt.hist((elMSE/lMSE)[mcut],np.linspace(0,0.02,50),histtype='step',density=True,lw=2,color='C0')
+plt.hist((elMSE/lMSE)[mcut*mrelax],np.linspace(0,0.02,50),histtype='step',density=True,label='relaxed',lw=2,color='C1')
+plt.xlabel('$N$')
+plt.ylabel('$\epsilon_{M_{200}}$')
+plt.savefig(plots_path+'epsilon_M200_ellip_'+part+'_'+lmcut+'.png')
