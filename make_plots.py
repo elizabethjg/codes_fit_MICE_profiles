@@ -116,7 +116,7 @@ elMSE   = np.array(masses.e_lgM200_S_E).astype(float)
 cS     = np.array(masses.c200_S).astype(float)
 cSE    = np.array(masses.c200_S_E).astype(float)
 ecS    = np.array(masses.e_c200_S).astype(float)
-ecSE   = np.array(masses['c200_S_E.1']).astype(float)
+ecSE   = np.array(masses.e_c200_S).astype(float)
 
 mrho   = (elMrho/lMrho < 0.5)*(ecrho/crho < 0.5)
 mrhoE  = (elMrhoE/lMrhoE < 0.5)*(ecrhoE/crhoE < 0.5)
@@ -135,6 +135,11 @@ index = np.arange(len(s))
 
 mrelax = (rc/main.r_max < 0.05)
 
+mR3D = np.isfinite(masses.R3D.astype(float))
+mR2D = np.isfinite(masses.R2D.astype(float))
+
+R3D  = np.array(masses.R3D.astype(float))
+R2D  = np.array(masses.R2D.astype(float))
 
 
 j = index[mrelax*(q < 0.4)*(main.lgM > 13.5)][6]
@@ -283,10 +288,21 @@ plt.savefig(plots_path+'c200_comparison_project_ellip_'+part+'_'+lmcut+'.png')
 
 
 plt.figure()
-plt.hist((ecrho/crho)[mcut],np.linspace(0,0.2,50),histtype='step',density=True,color='C0')
+plt.hist(R3D[mcut*~mrelax*mR3D],np.linspace(0,100,50),histtype='step',density=True,color='C0')
+plt.hist(R3D[mcut*mrelax*mR3D],np.linspace(0,100,50),histtype='step',density=True,label='relaxed',color='C1')
+plt.legend()
+plt.hist(R2D[mcut*~mrelax*mR2D],np.linspace(0,100,50),histtype='step',density=True,lw=2,color='C0')
+plt.hist(R2D[mcut*mrelax*mR2D],np.linspace(0,100,50),histtype='step',density=True,label='relaxed',lw=2,color='C1')
+plt.xlabel('$N$')
+plt.ylabel('$R$')
+plt.savefig(plots_path+'res_'+part+'_'+lmcut+'.png')
+
+
+plt.figure()
+plt.hist((ecrho/crho)[mcut*~mrelax],np.linspace(0,0.2,50),histtype='step',density=True,color='C0')
 plt.hist((ecrho/crho)[mcut*mrelax],np.linspace(0,0.2,50),histtype='step',density=True,label='relaxed',color='C1')
 plt.legend()
-plt.hist((ecS/cS)[mcut],np.linspace(0,0.2,50),histtype='step',density=True,lw=2,color='C0')
+plt.hist((ecS/cS)[mcut*~mrelax],np.linspace(0,0.2,50),histtype='step',density=True,lw=2,color='C0')
 plt.hist((ecS/cS)[mcut*mrelax],np.linspace(0,0.2,50),histtype='step',density=True,label='relaxed',lw=2,color='C1')
 plt.xlabel('$N$')
 plt.ylabel('$\epsilon_{c_{200}}$')

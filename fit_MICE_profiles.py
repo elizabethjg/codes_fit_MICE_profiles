@@ -36,7 +36,7 @@ avance = np.linspace(0,len(profiles)/ncores,10)
 
 def fit_profile(pro,z,plot=False):
     
-         # roc_mpc = cosmo.critical_density(z).to(u.Msun/(u.Mpc)**3).value
+         roc_mpc = cosmo.critical_density(z).to(u.Msun/(u.Mpc)**3).value
      
          r   = pro[2:2+nrings]/1.e3         
          
@@ -51,9 +51,11 @@ def fit_profile(pro,z,plot=False):
          S     = pro[2+3*nrings:2+4*nrings]
          S_E   = pro[2+4*nrings:]
 
-         # Vsum = (4./3.)*np.pi*(rbins[1:]**3)
-         # Msum = np.cumsum(rho/mpV)*mp
-         # mr200 = (Msum/Vsum) > 200.*roc_mpc
+         Vsum = (4./3.)*np.pi*(rbins[1:]**3)
+         Msum = np.cumsum(rho/mpV)*mp
+         j200 = np.argmin(abs((Msum/Vsum)/(200.*roc_mpc) - 1))
+         MDelta = Msum[j200]
+         Delta  = ((Msum/Vsum)/roc_mpc)[j200]
          
          mrho = rho > 0.
          mS = (S > 0.)*(r < 0.7*pro[1]*1.e-3)
@@ -67,10 +69,6 @@ def fit_profile(pro,z,plot=False):
          rho_E_f    = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z,cosmo,True)
          S_f      = Sigma_fit(r[mS],S[mS],mpA[mS],z,cosmo,True)
          S_E_f      = Sigma_fit(r[mSe],S_E[mSe],mpA[mSe],z,cosmo,True)
-         # rho_f    = rho_fit(r[rho>0],rho[rho>0],np.sqrt(mpV/rho)[rho>0],z,cosmo,True)
-         # rho_E_f    = rho_fit(r[rho_E>0],rho_E[rho_E>0],np.sqrt(mpV/rho_E)[rho_E>0],z,cosmo,True)
-         # S_f      = Sigma_fit(r[S>0],S[S>0],np.sqrt(mpV/S)[S>0],z,cosmo,True)
-         # S_E_f      = Sigma_fit(r[S_E>0],S_E[S_E>0],np.sqrt(mpV/S_E)[S_E>0],z,cosmo,True)
          
          if plot:
              
@@ -116,7 +114,8 @@ def fit_profile(pro,z,plot=False):
              plt.close('all')
          
          
-         return [np.log10(rho_f.M200),rho_f.error_M200/(rho_f.M200*np.log(10.)),
+         return [np.log10(Mdelta),Delta,
+                 np.log10(rho_f.M200),rho_f.error_M200/(rho_f.M200*np.log(10.)),
                  rho_f.c200,rho_f.error_c200,rho_f.res,mrho.sum(),
                  np.log10(rho_E_f.M200),rho_E_f.error_M200/(rho_E_f.M200*np.log(10.)),
                  rho_E_f.c200,rho_E_f.error_c200,rho_E_f.res,mrhoe.sum(),
@@ -129,7 +128,7 @@ def fit_profile(pro,z,plot=False):
 def run_fit_profile(index):
     
     
-    output_fits = np.zeros((len(index),24))
+    output_fits = np.zeros((len(index),26))
     
     a = '='
     
@@ -170,6 +169,6 @@ output = np.column_stack((hn,output))
     
 out_file = '/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass.csv.bz2'
 
-head = 'column_halo_id,lgM200_rho,e_lgM200_rho,c200_rho,e_c200_rho,R3D,nb_rho,lgM200_rho_E,e_lgM200_rho_E,c200_rho_E,e_c200_rho_E,R3D_E,nb_rho_E,lgM200_S,e_lgM200_S,c200_S,e_c200_S,R2D,nb_S,lgM200_S_E,e_lgM200_S_E,c200_S_E,e_c200_S_E,R2D_E,nb_S_E'
+head = 'column_halo_id,Mdelta,Delta,lgM200_rho,e_lgM200_rho,c200_rho,e_c200_rho,R3D,nb_rho,lgM200_rho_E,e_lgM200_rho_E,c200_rho_E,e_c200_rho_E,R3D_E,nb_rho_E,lgM200_S,e_lgM200_S,c200_S,e_c200_S,R2D,nb_S,lgM200_S_E,e_lgM200_S_E,c200_S_E,e_c200_S_E,R2D_E,nb_S_E'
 
-np.savetxt(out_file,output,fmt=['%10d']+['%5.2f']*24,header=head,comments='',delimiter=',')
+np.savetxt(out_file,output,fmt=['%10d']+['%5.2f']*26,header=head,comments='',delimiter=',')
