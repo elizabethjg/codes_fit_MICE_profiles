@@ -114,7 +114,7 @@ def fit_profile(pro,z,plot=False):
              plt.close('all')
          
          
-         return [np.log10(Mdelta),Delta,
+         return [np.log10(MDelta),Delta,
                  np.log10(rho_f.M200),rho_f.error_M200/(rho_f.M200*np.log(10.)),
                  rho_f.c200,rho_f.error_c200,rho_f.res,mrho.sum(),
                  np.log10(rho_E_f.M200),rho_E_f.error_M200/(rho_E_f.M200*np.log(10.)),
@@ -169,6 +169,6 @@ output = np.column_stack((hn,output))
     
 out_file = '/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass.csv.bz2'
 
-head = 'column_halo_id,Mdelta,Delta,lgM200_rho,e_lgM200_rho,c200_rho,e_c200_rho,R3D,nb_rho,lgM200_rho_E,e_lgM200_rho_E,c200_rho_E,e_c200_rho_E,R3D_E,nb_rho_E,lgM200_S,e_lgM200_S,c200_S,e_c200_S,R2D,nb_S,lgM200_S_E,e_lgM200_S_E,c200_S_E,e_c200_S_E,R2D_E,nb_S_E'
+head = 'column_halo_id,MDelta,Delta,lgM200_rho,e_lgM200_rho,c200_rho,e_c200_rho,R3D,nb_rho,lgM200_rho_E,e_lgM200_rho_E,c200_rho_E,e_c200_rho_E,R3D_E,nb_rho_E,lgM200_S,e_lgM200_S,c200_S,e_c200_S,R2D,nb_S,lgM200_S_E,e_lgM200_S_E,c200_S_E,e_c200_S_E,R2D_E,nb_S_E'
 
 np.savetxt(out_file,output,fmt=['%10d']+['%5.2f']*26,header=head,comments='',delimiter=',')
