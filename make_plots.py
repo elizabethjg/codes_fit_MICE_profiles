@@ -22,81 +22,88 @@ rc = np.array(np.sqrt((main.xc - main.xc_rc)**2 + (main.yc - main.yc_rc)**2 + (m
 plots_path = '/home/elizabeth/plots/'
 
         
-def fit_profile(pro,z,plot=True):
+index = np.arange(len(profiles))
+
+
+def fit_profile(pro,z,plot=True,halo=''):
     
-         nrings = 10
-         mp = 2.927e10
-         r   = pro[2:2+nrings]/1.e3
-         
+         roc_mpc = cosmo.critical_density(z).to(u.Msun/(u.Mpc)**3).value
+     
+         r   = pro[2:2+nrings]/1.e3         
          
          rbins = (np.arange(nrings+1)*(pro[1]/float(nrings)))/1000
          mpV = mp/((4./3.)*np.pi*(rbins[1:]**3 - rbins[:-1]**3)) # mp/V
+         mpA = mp/(np.pi*(rbins[1:]**2 - rbins[:-1]**3)) # mp/A
+         
+
          
          rho   = pro[2+nrings:2+2*nrings]
          rho_E = pro[2+2*nrings:2+3*nrings]
          S     = pro[2+3*nrings:2+4*nrings]
          S_E   = pro[2+4*nrings:]
-         
-         mrho = rho > 0.
-         mS = S > 0.
-         mrhoe = rho_E > 0.
-         mSe = S_E > 0.
 
+         Vsum = (4./3.)*np.pi*(rbins[1:]**3)
+         Msum = np.cumsum(rho/mpV)*mp
+         j200 = np.argmin(abs((Msum/Vsum)/(200.*roc_mpc) - 1))
+         MDelta = Msum[j200]
+         Delta  = ((Msum/Vsum)/roc_mpc)[j200]
          
-         if mrho.sum() > 0. and mS.sum() > 0. and mrhoe.sum() > 0. and mSe.sum() > 0.:
+         mrho = (rho > 0.)*(r < 0.7*pro[1]*1.e-3)
+         mS = (S > 0.)*(r < 0.7*pro[1]*1.e-3)
+         mrhoe = (rho_E > 0.)*(r < 0.7*pro[1]*1.e-3)
+         mSe = (S_E > 0.)*(r < 0.7*pro[1]*1.e-3)
          
-             rho_f    = rho_fit(r[rho>0],rho[rho>0],np.sqrt(mpV/rho)[rho>0],z,cosmo,True)
-             rho_E_f    = rho_fit(r[rho_E>0],rho_E[rho_E>0],np.sqrt(mpV/rho_E)[rho_E>0],z,cosmo,True)
-             S_f      = Sigma_fit(r[S>0],S[S>0],np.sqrt(mpV/S)[S>0],z,cosmo,True)
-             S_E_f      = Sigma_fit(r[S_E>0],S_E[S_E>0],np.sqrt(mpV/S_E)[S_E>0],z,cosmo,True)
-             
-             if plot:
-
-                 
-                 m = rho_f.xplot > r.min()
-                 m1 = rho_E_f.xplot >  r.min()
-                 m2 = S_f.xplot >  r.min()
-                 m3 = S_E_f.xplot >  r.min()
-             
-                 f,ax = plt.subplots()
-                 ax.plot(r,rho,'C7o',lw=2)
-                 ax.plot(r,rho,'C7',lw=2)
-                 ax.plot(rho_f.xplot[m],rho_f.yplot[m],'k')
-                 ax.plot(r,rho_E,'C7x',lw=2)
-                 ax.plot(r,rho_E,'C7--',lw=2)
-                 ax.plot(rho_E_f.xplot[m1],rho_E_f.yplot[m1],'k--')
-                 
-                 f2,ax2 = plt.subplots()                 
-                 ax2.plot(r,S,'C7',lw=2)
-                 ax2.plot(r,S,'C7o',lw=2)
-                 ax2.plot(r,S_E,'C7--',lw=2)
-                 ax2.plot(r,S_E,'C7x',lw=2)
-                 ax2.plot(S_f.xplot[m2],S_f.yplot[m2],'k')
-                 ax2.plot(S_E_f.xplot[m3],S_E_f.yplot[m3],'k--')
-             
-                 ax.set_xscale('log')
-                 ax.set_yscale('log')
-                 ax2.set_xscale('log')
-                 ax2.set_yscale('log')
-                 ax.set_ylabel(r'$\rho [M_\odot h^2/Mpc^3]$')
-                 ax.set_xlabel('$r[Mpc/h]$')
-                 ax2.set_ylabel(r'$\Sigma [M_\odot h/Mpc^2]$')
-                 ax2.set_xlabel('$R[Mpc/h]$')
-             
-             
-                 f.savefig(plots_path+'rho_profile_'+part+'.png')
-                 f2.savefig(plots_path+'Sigma_profile_'+part+'.png')
-
-             
-             
-             return [z,np.log10(rho_f.M200),rho_f.c200,
-                     np.log10(rho_E_f.M200),rho_E_f.c200,
-                     np.log10(S_f.M200),S_f.c200,
-                     np.log10(S_E_f.M200),S_E_f.c200]
          
-         else:
+         # error = 1.e12*np.ones(len(r))
+         
+         rho_f    = rho_fit(r[mrho],rho[mrho],mpV[mrho],z,cosmo,True)
+         rho_E_f    = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z,cosmo,True)
+         S_f      = Sigma_fit(r[mS],S[mS],mpA[mS],z,cosmo,True)
+         S_E_f      = Sigma_fit(r[mSe],S_E[mSe],mpA[mSe],z,cosmo,True)
+         
+         if plot:
              
-             return np.zeros(9)
+             
+             m = rho_f.xplot > r.min()
+             m1 = rho_E_f.xplot >  r.min()
+             m2 = S_f.xplot >  r.min()
+             m3 = S_E_f.xplot >  r.min()
+             
+         
+             f,ax = plt.subplots()                              
+             ax.fill_between(r,rho+mpV*0.5,rho-mpV*0.5,color='C0',alpha=0.5)
+             ax.plot(r,rho,'C7',lw=2,label=halo)
+             ax.plot(rho_f.xplot[m],rho_f.yplot[m],'k')
+             ax.fill_between(r,rho_E+mpV*0.5,rho_E-mpV*0.5,color='C1',alpha=0.5)
+             ax.plot(r,rho_E,'C7--',lw=2)
+             ax.plot(rho_E_f.xplot[m1],rho_E_f.yplot[m1],'k--')
+             ax.legend()
+             
+             f2,ax2 = plt.subplots()                 
+             ax2.fill_between(r,S+mpA*0.5,S-mpA*0.5,color='C0',alpha=0.5)
+             ax2.plot(r,S,'C7',lw=2,label=halo)
+             ax2.fill_between(r,S_E+mpA*0.5,S_E-mpA*0.5,color='C1',alpha=0.5)
+             ax2.plot(r,S_E,'C7--',lw=2)
+             ax2.plot(S_f.xplot[m2],S_f.yplot[m2],'k')
+             ax2.plot(S_E_f.xplot[m3],S_E_f.yplot[m3],'k--')
+             ax2.legend()
+             ax.set_xscale('log')
+             ax.set_yscale('log')
+             ax2.set_xscale('log')
+             ax2.set_yscale('log')
+             ax.set_ylabel(r'$\rho [M_\odot h^2/Mpc^3]$')
+             ax.set_xlabel('$r[Mpc/h]$')
+             ax2.set_ylabel(r'$\Sigma [M_\odot h/Mpc^2]$')
+             ax2.set_xlabel('$R[Mpc/h]$')
+         
+             f.savefig(plots_path+'profile_rho_'+part+'_'+halo+'.png')
+             f2.savefig(plots_path+'profile_S_'+part+'_'+lmcut+'.png')
+         
+             print(0.7*(pro[1]/1000.))
+             print(np.log10(rho_f.M200),rho_f.c200)
+         
+         
+         
                  
 lMrho   = np.array(masses.lgM200_rho).astype(float)
 lMrhoE  = np.array(masses.lgM200_rho_E).astype(float)
@@ -142,10 +149,6 @@ R3D  = np.array(masses.R3D.astype(float))
 R2D  = np.array(masses.R2D.astype(float))
 
 
-j = index[mrelax*(q < 0.4)*(main.lgM > 13.5)][6]
-
-# fit_profile(profiles[j],zhalos[j])
-
 k2 = np.array(main.Ekin)
 u2 = np.array(main.Epot)
 
@@ -154,7 +157,17 @@ mrelax2 = ((2.*k2)/abs(u2)) < 1.35
 mcut = (main.lgM > 12.5)#*mrelax
 lmcut = 'M125'
 
+
+# RELAXATION 
 m = mcut
+
+plt.figure()
+plt.scatter(zhalos[m],(rc/main.r_max)[m],c=((2.*k2)/abs(u2))[m],alpha=0.3,s=2,vmax=1.35,zorder=2)
+plt.xlabel('$z$')
+plt.ylabel('$r_c/r_{max}$')
+plt.ylim([0.,0.6])
+plt.colorbar()
+plt.savefig(plots_path+'01_rc_z_'+part+'_'+lmcut+'.png')
 
 plt.figure()
 plt.scatter(zhalos[m],((2.*k2)/abs(u2))[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3,zorder=2)
@@ -163,30 +176,77 @@ plt.ylabel('$(2K)/U$')
 plt.ylim([0.5,3])
 plt.axhline(1.35)
 plt.colorbar()
-plt.savefig(plots_path+'Eratio_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'02_Eratio_z_'+part+'_'+lmcut+'.png')
 
+
+plt.figure()
+plt.scatter(main.lgM[m],(rc/main.r_max)[m],c=((2.*k2)/abs(u2))[m],alpha=0.3,s=2,vmax=1.35,zorder=2)
+plt.xlabel(r'$\log M_{FOF}$')
+plt.ylabel('$r_c/r_{max}$')
+plt.ylim([0.,0.6])
+plt.colorbar()
+plt.savefig(plots_path+'03_rc_lgM_'+part+'_'+lmcut+'.png')
+
+plt.figure()
+plt.scatter(main.lgM[m],((2.*k2)/abs(u2))[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3,zorder=2)
+plt.xlabel(r'$\log M_{FOF}$')
+plt.ylabel('$(2K)/U$')
+plt.ylim([0.5,3])
+plt.axhline(1.35)
+plt.colorbar()
+plt.savefig(plots_path+'04_Eratio_lgM_'+part+'_'+lmcut+'.png')
+
+plt.figure()
+plt.plot((rc/main.r_max)[m],((2.*k2)/abs(u2))[m],'.')
+plt.axis([0,0.7,0.7,5])
+plt.ylabel('$(2K)/U$')
+plt.xlabel('$r_c/r_{max}$')
+plt.savefig(plots_path+'05_rc_Eratio_'+part+'_'+lmcut+'.png')
+
+
+# SHAPES
 
 plt.figure()
 plt.scatter(sr[m],s[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3,zorder=2)
 plt.xlabel('$s_r$')
 plt.ylabel('$s$')
 plt.colorbar()
-plt.savefig(plots_path+'s_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'06_s_'+part+'_'+lmcut+'.png')
 
 plt.figure()
 plt.scatter(qr[m],q[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3,zorder=2)
 plt.xlabel('$q_r$')
 plt.ylabel('$q$')
 plt.colorbar()
-plt.savefig(plots_path+'q_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'07_q_'+part+'_'+lmcut+'.png')
 
 plt.figure()
 plt.scatter(q2dr[m],q2d[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3,zorder=2)
 plt.xlabel('$q2d_r$')
 plt.ylabel('$q2d$')
 plt.colorbar()
-plt.savefig(plots_path+'q2d_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'08_q2d_'+part+'_'+lmcut+'.png')
 
+# PROFILES 
+msel  = (rc/main.r_max < 0.05)*(main.lgM > 13.5)*(R3D>0.4)
+j =  index[msel][0]
+fit_profile(profiles[j],zhalos[j],plot=True,halo='relaxed')
+
+msel  = (rc/main.r_max > 0.4)*(main.lgM > 13.5)*(R3D<0.2)
+j =  index[msel][0]
+fit_profile(profiles[j],zhalos[j],plot=True,halo='unrelaxed')
+
+plt.figure()
+plt.scatter(main.lgM[m],R3D[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3,zorder=2)
+plt.xlabel(r'$\log M_{FOF}$')
+plt.ylabel('$R_{3D}$')
+plt.ylim([0.,1])
+plt.colorbar()
+plt.savefig(plots_path+'09_Res_'+part+'_'+lmcut+'.png')
+
+
+# MASS COMPARISON
+# with FOF
 m = mrho*mcut
 plt.figure()
 plt.scatter(zhalos[m],10**(lMrho[m] - np.array(main.lgM)[m]),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
@@ -195,7 +255,17 @@ plt.ylabel('$M_{200}/M_{FOF}$')
 plt.ylim([0,1.2])
 plt.axhline(1)
 plt.colorbar()
-plt.savefig(plots_path+'M_comparison_3D_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'10_M_comparison_3D_'+part+'_'+lmcut+'.png')
+
+m = mrho*mcut*(masses.Delta > 180)*(masses.Delta < 220)
+plt.figure()
+plt.scatter(zhalos[m],10**(lMrho[m] - np.array(masses.MDelta.astype(float))[m]),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.xlabel('$z$')
+plt.ylabel('$M_{200}/M_{\Delta}$')
+plt.ylim([0.2,2])
+plt.axhline(1)
+plt.colorbar()
+plt.savefig(plots_path+'11_M_comparison_Delta_'+part+'_'+lmcut+'.png')
 
 m = mS*mcut
 plt.figure()
@@ -205,7 +275,49 @@ plt.ylim([0,1.2])
 plt.ylabel('$M^{2D}_{200}/M_{FOF}$')
 plt.axhline(1)
 plt.colorbar()
-plt.savefig(plots_path+'M_comparison_2D_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'12_M_comparison_2D_'+part+'_'+lmcut+'.png')
+
+# 3D vs 2D
+
+m = (mrho*mS)*mcut
+plt.figure()
+plt.scatter(s[m],np.array(10**(lMrho[m] - lMS[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.xlabel('$S=c/a$')
+plt.ylabel('$M_{200}/M^{2D}_{200}$')
+plt.ylim([0,3])
+plt.axhline(1)
+plt.colorbar()
+plt.savefig(plots_path+'13_M_comparison_project_'+part+'_'+lmcut+'.png')
+
+plt.figure()
+plt.scatter(s[m],(crho/cS)[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.xlabel('$S=c/a$')
+plt.ylabel('$c_{200}/c^{2D}_{200}$')
+plt.ylim([-0.5,6])
+plt.axhline(1)
+plt.colorbar()
+plt.savefig(plots_path+'14_c200_comparison_project_'+part+'_'+lmcut+'.png')
+
+m = (mrhoE*mSE)*mcut
+plt.figure()
+plt.scatter(s[m],np.array(10**(lMrhoE[m] - lMSE[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.xlabel('$S=c/a$')
+plt.ylabel('$M_{200}/M^{2D}_{200}$')
+plt.ylim([0,3])
+plt.axhline(1)
+plt.colorbar()
+plt.savefig(plots_path+'15_M_comparison_project_ellip_'+part+'_'+lmcut+'.png')
+
+plt.figure()
+plt.scatter(s[m],(crhoE/cSE)[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.xlabel('$S=c/a$')
+plt.ylabel('$c_{200}/c^{2D}_{200}$')
+plt.ylim([-0.5,6])
+plt.axhline(1)
+plt.colorbar()
+plt.savefig(plots_path+'16_c200_comparison_project_ellip_'+part+'_'+lmcut+'.png')
+
+# SPHERICAL VS ELLIPTICAL
 
 m = (mrho*mrhoE)*mcut
 plt.figure()
@@ -215,7 +327,7 @@ plt.ylabel('$M_{200}/M_{200E}$')
 plt.ylim([0,3])
 plt.axhline(1)
 plt.colorbar()
-plt.savefig(plots_path+'M_comparison_3D_elliptical_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'17_M_comparison_3D_elliptical_'+part+'_'+lmcut+'.png')
 
 plt.figure()
 plt.scatter(s[m],(crho/crhoE)[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
@@ -224,7 +336,7 @@ plt.ylabel('$c_{200}/c_{200E}$')
 plt.ylim([-0.5,6])
 plt.axhline(1)
 plt.colorbar()
-plt.savefig(plots_path+'c200_comparison_3D_elliptical_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'18_c200_comparison_3D_elliptical_'+part+'_'+lmcut+'.png')
 
 
 m = (mS*mSE)*mcut
@@ -235,7 +347,7 @@ plt.ylabel('$M^{2D}_{200}/M^{2D}_{200E}$')
 plt.ylim([0,3])
 plt.axhline(1)
 plt.colorbar()
-plt.savefig(plots_path+'M_comparison_2D_elliptical_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'19_M_comparison_2D_elliptical_'+part+'_'+lmcut+'.png')
 
 
 plt.figure()
@@ -245,95 +357,6 @@ plt.ylabel('$c^{2D}_{200}/c^{2D}_{200E}$')
 plt.ylim([-0.5,6])
 plt.axhline(1)
 plt.colorbar()
-plt.savefig(plots_path+'c200_comparison_2D_elliptical_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'20_c200_comparison_2D_elliptical_'+part+'_'+lmcut+'.png')
 
 
-m = (mrho*mS)*mcut
-plt.figure()
-plt.scatter(s[m],np.array(10**(lMrho[m] - lMS[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
-plt.xlabel('$S=c/a$')
-plt.ylabel('$M_{200}/M^{2D}_{200}$')
-plt.ylim([0,3])
-plt.axhline(1)
-plt.colorbar()
-plt.savefig(plots_path+'M_comparison_project_'+part+'_'+lmcut+'.png')
-
-plt.figure()
-plt.scatter(s[m],(crho/cS)[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
-plt.xlabel('$S=c/a$')
-plt.ylabel('$c_{200}/c^{2D}_{200}$')
-plt.ylim([-0.5,6])
-plt.axhline(1)
-plt.colorbar()
-plt.savefig(plots_path+'c200_comparison_project_'+part+'_'+lmcut+'.png')
-
-m = (mrhoE*mSE)*mcut
-plt.figure()
-plt.scatter(s[m],np.array(10**(lMrhoE[m] - lMSE[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
-plt.xlabel('$S=c/a$')
-plt.ylabel('$M_{200}/M^{2D}_{200}$')
-plt.ylim([0,3])
-plt.axhline(1)
-plt.colorbar()
-plt.savefig(plots_path+'M_comparison_project_ellip_'+part+'_'+lmcut+'.png')
-
-plt.figure()
-plt.scatter(s[m],(crhoE/cSE)[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
-plt.xlabel('$S=c/a$')
-plt.ylabel('$c_{200}/c^{2D}_{200}$')
-plt.ylim([-0.5,6])
-plt.axhline(1)
-plt.colorbar()
-plt.savefig(plots_path+'c200_comparison_project_ellip_'+part+'_'+lmcut+'.png')
-
-
-plt.figure()
-plt.hist(R3D[mcut*~mrelax*mR3D],np.linspace(0,100,50),histtype='step',density=True,color='C0')
-plt.hist(R3D[mcut*mrelax*mR3D],np.linspace(0,100,50),histtype='step',density=True,label='relaxed',color='C1')
-plt.legend()
-plt.hist(R2D[mcut*~mrelax*mR2D],np.linspace(0,100,50),histtype='step',density=True,lw=2,color='C0')
-plt.hist(R2D[mcut*mrelax*mR2D],np.linspace(0,100,50),histtype='step',density=True,label='relaxed',lw=2,color='C1')
-plt.xlabel('$N$')
-plt.ylabel('$R$')
-plt.savefig(plots_path+'res_'+part+'_'+lmcut+'.png')
-
-
-plt.figure()
-plt.hist((ecrho/crho)[mcut*~mrelax],np.linspace(0,0.2,50),histtype='step',density=True,color='C0')
-plt.hist((ecrho/crho)[mcut*mrelax],np.linspace(0,0.2,50),histtype='step',density=True,label='relaxed',color='C1')
-plt.legend()
-plt.hist((ecS/cS)[mcut*~mrelax],np.linspace(0,0.2,50),histtype='step',density=True,lw=2,color='C0')
-plt.hist((ecS/cS)[mcut*mrelax],np.linspace(0,0.2,50),histtype='step',density=True,label='relaxed',lw=2,color='C1')
-plt.xlabel('$N$')
-plt.ylabel('$\epsilon_{c_{200}}$')
-plt.savefig(plots_path+'epsilon_c200_'+part+'_'+lmcut+'.png')
-
-plt.figure()
-plt.hist((elMrho/lMrho)[mcut],np.linspace(0,0.004,50),histtype='step',density=True,color='C0')
-plt.hist((elMrho/lMrho)[mcut*mrelax],np.linspace(0,0.004,50),histtype='step',density=True,label='relaxed',color='C1')
-plt.legend()
-plt.hist((elMS/lMS)[mcut],np.linspace(0,0.004,50),histtype='step',density=True,lw=2,color='C0')
-plt.hist((elMS/lMS)[mcut*mrelax],np.linspace(0,0.004,50),histtype='step',density=True,label='relaxed',lw=2,color='C1')
-plt.xlabel('$N$')
-plt.ylabel('$\epsilon_{M_{200}}$')
-plt.savefig(plots_path+'epsilon_M200_'+part+'_'+lmcut+'.png')
-
-plt.figure()
-plt.hist((ecrhoE/crhoE)[mcut],np.linspace(0,0.2,50),histtype='step',density=True,color='C0')
-plt.hist((ecrhoE/crhoE)[mcut*mrelax],np.linspace(0,0.2,50),histtype='step',density=True,label='relaxed',color='C1')
-plt.legend()
-plt.hist((ecSE/cSE)[mcut],np.linspace(0,0.2,50),histtype='step',density=True,lw=2,color='C0')
-plt.hist((ecSE/cSE)[mcut*mrelax],np.linspace(0,0.2,50),histtype='step',density=True,label='relaxed',lw=2,color='C1')
-plt.xlabel('$N$')
-plt.ylabel('$\epsilon_{c_{200}}$')
-plt.savefig(plots_path+'epsilon_c200_ellip_'+part+'_'+lmcut+'.png')
-
-plt.figure()
-plt.hist((elMrhoE/lMrhoE)[mcut],np.linspace(0,0.02,50),histtype='step',density=True,color='C0')
-plt.hist((elMrhoE/lMrhoE)[mcut*mrelax],np.linspace(0,0.02,50),histtype='step',density=True,label='relaxed',color='C1')
-plt.legend()
-plt.hist((elMSE/lMSE)[mcut],np.linspace(0,0.02,50),histtype='step',density=True,lw=2,color='C0')
-plt.hist((elMSE/lMSE)[mcut*mrelax],np.linspace(0,0.02,50),histtype='step',density=True,label='relaxed',lw=2,color='C1')
-plt.xlabel('$N$')
-plt.ylabel('$\epsilon_{M_{200}}$')
-plt.savefig(plots_path+'epsilon_M200_ellip_'+part+'_'+lmcut+'.png')

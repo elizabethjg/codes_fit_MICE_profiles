@@ -8,7 +8,7 @@ from multiprocessing import Pool
 from multiprocessing import Process
 import astropy.units as u
 import pandas as pd
-part = '4_4'
+part = '8_5'
 cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 
 # hn = fits.open('../catalogs/halo_props/halo_props2_'+part+'_2_main_plus.fits')[1].data.Halo_number
@@ -16,12 +16,12 @@ cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 # profiles = np.loadtxt('../catalogs/halo_props/halo_props2_'+part+'.csv_profile.bz2',skiprows=1,delimiter=',')
 
 ncores = 32
-main = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2')
-profiles = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
+main0 = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2')
+profiles0 = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
 
-# j = np.argsort(np.array(main0.lgM))[-10000:]
-# main = main0.loc[j]
-# profiles = profiles0[j]
+j = np.argsort(np.array(main0.lgM))[-10000:]
+main = main0.loc[j]
+profiles = profiles0[j]
 
 
 mp = 2.927e10
@@ -57,9 +57,9 @@ def fit_profile(pro,z,plot=False):
          MDelta = Msum[j200]
          Delta  = ((Msum/Vsum)/roc_mpc)[j200]
          
-         mrho = rho > 0.
+         mrho = (rho > 0.)*(r < 0.7*pro[1]*1.e-3)
          mS = (S > 0.)*(r < 0.7*pro[1]*1.e-3)
-         mrhoe = rho_E > 0.
+         mrhoe = (rho_E > 0.)*(r < 0.7*pro[1]*1.e-3)
          mSe = (S_E > 0.)*(r < 0.7*pro[1]*1.e-3)
          
          
@@ -169,6 +169,6 @@ output = np.column_stack((hn,output))
     
 out_file = '/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass.csv.bz2'
 
-head = 'column_halo_id,MDelta,Delta,lgM200_rho,e_lgM200_rho,c200_rho,e_c200_rho,R3D,nb_rho,lgM200_rho_E,e_lgM200_rho_E,c200_rho_E,e_c200_rho_E,R3D_E,nb_rho_E,lgM200_S,e_lgM200_S,c200_S,e_c200_S,R2D,nb_S,lgM200_S_E,e_lgM200_S_E,c200_S_E,e_c200_S_E,R2D_E,nb_S_E'
+head = 'column_halo_id,lgMDelta,Delta,lgM200_rho,e_lgM200_rho,c200_rho,e_c200_rho,R3D,nb_rho,lgM200_rho_E,e_lgM200_rho_E,c200_rho_E,e_c200_rho_E,R3D_E,nb_rho_E,lgM200_S,e_lgM200_S,c200_S,e_c200_S,R2D,nb_S,lgM200_S_E,e_lgM200_S_E,c200_S_E,e_c200_S_E,R2D_E,nb_S_E'
 
 np.savetxt(out_file,output,fmt=['%10d']+['%5.2f']*26,header=head,comments='',delimiter=',')
