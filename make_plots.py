@@ -8,6 +8,7 @@ from multiprocessing import Pool
 from multiprocessing import Process
 import astropy.units as u
 import pandas as pd
+from models_profiles import *
 cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 
 # part = '4_4'
@@ -104,7 +105,7 @@ def fit_profile(pro,z,plot=True,halo=''):
              print(np.log10(rho_f.M200),rho_f.c200)
          
          
-         
+r200 = R200_NFW(10**lMrho,zhalos,cosmo=cosmo)*1000.
                  
 lMrho   = np.array(masses.lgM200_rho).astype(float)
 lMrhoE  = np.array(masses.lgM200_rho_E).astype(float)
@@ -160,7 +161,7 @@ lmcut = 'M125'
 
 
 # RELAXATION 
-m = mcut
+m = mcut*(zhalos < 0.7)
 
 plt.figure()
 plt.scatter(zhalos[m],(rc/main.r_max)[m],c=((2.*k2)/abs(u2))[m],alpha=0.3,s=2,vmax=1.35,zorder=2)
@@ -280,7 +281,7 @@ plt.savefig(plots_path+'12_M_comparison_2D_'+part+'_'+lmcut+'.png')
 
 # 3D vs 2D
 
-m = (mrho*mS)*mcut
+m = (mrho*mS)*mcut*(zhalos < 0.7)
 plt.figure()
 plt.scatter(s[m],np.array(10**(lMrho[m] - lMS[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$S=c/a$')
