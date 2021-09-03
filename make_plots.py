@@ -10,7 +10,8 @@ import astropy.units as u
 import pandas as pd
 cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 
-part = '4_4'
+# part = '4_4'
+part = '8_5'
 
 main = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2') 
 profiles = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
