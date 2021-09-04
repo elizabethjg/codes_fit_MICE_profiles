@@ -65,64 +65,70 @@ def fit_profile(pro,z,plot=False):
          
          # error = 1.e12*np.ones(len(r))
          
-         rho_f    = rho_fit(r[mrho],rho[mrho],mpV[mrho],z,cosmo,True)
-         rho_E_f    = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z,cosmo,True)
-         S_f      = Sigma_fit(r[mS],S[mS],mpA[mS],z,cosmo,True)
-         S_E_f      = Sigma_fit(r[mSe],S_E[mSe],mpA[mSe],z,cosmo,True)
-         
-         if plot:
+         if mrho.sum() > 0. and mS.sum() > 0. and mrhoe.sum() > 0. and mSe.sum() > 0.:
+
+            rho_f    = rho_fit(r[mrho],rho[mrho],mpV[mrho],z,cosmo,True)
+            rho_E_f    = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z,cosmo,True)
+            S_f      = Sigma_fit(r[mS],S[mS],mpA[mS],z,cosmo,True)
+            S_E_f      = Sigma_fit(r[mSe],S_E[mSe],mpA[mSe],z,cosmo,True)
+            
+            if plot:
+                
+                
+                m = rho_f.xplot > r.min()
+                m1 = rho_E_f.xplot >  r.min()
+                m2 = S_f.xplot >  r.min()
+                m3 = S_E_f.xplot >  r.min()
+                
+            
+                f,ax = plt.subplots()                              
+                ax.fill_between(r,rho+mpV*0.5,rho-mpV*0.5,color='C0',alpha=0.5)
+                ax.plot(r,rho,'C7',lw=2)
+                ax.plot(rho_f.xplot[m],rho_f.yplot[m],'k')
+                ax.fill_between(r,rho_E+mpV*0.5,rho_E-mpV*0.5,color='C1',alpha=0.5)
+                ax.plot(r,rho_E,'C7--',lw=2)
+                ax.plot(rho_E_f.xplot[m1],rho_E_f.yplot[m1],'k--')
+                
+                
+                f2,ax2 = plt.subplots()                 
+                ax2.fill_between(r,S+mpA*0.5,S-mpA*0.5,color='C0',alpha=0.5)
+                ax2.plot(r,S,'C7',lw=2)
+                ax2.fill_between(r,S_E+mpA*0.5,S_E-mpA*0.5,color='C1',alpha=0.5)
+                ax2.plot(r,S_E,'C7--',lw=2)
+                ax2.plot(S_f.xplot[m2],S_f.yplot[m2],'k')
+                ax2.plot(S_E_f.xplot[m3],S_E_f.yplot[m3],'k--')
+            
+                ax.set_xscale('log')
+                ax.set_yscale('log')
+                ax2.set_xscale('log')
+                ax2.set_yscale('log')
+                ax.set_ylabel(r'$\rho [M_\odot h^2/Mpc^3]$')
+                ax.set_xlabel('$r[Mpc/h]$')
+                ax2.set_ylabel(r'$\Sigma [M_\odot h/Mpc^2]$')
+                ax2.set_xlabel('$R[Mpc/h]$')
+            
+            
+                print(0.7*(pro[1]/1000.))
+                print(np.log10(rho_f.M200),rho_f.c200)
+            
+                input("Press Enter to continue...")
+            
+                plt.close('all')
+            
+            
+            return [np.log10(MDelta),Delta,
+                    np.log10(rho_f.M200),rho_f.error_M200/(rho_f.M200*np.log(10.)),
+                    rho_f.c200,rho_f.error_c200,rho_f.res,mrho.sum(),
+                    np.log10(rho_E_f.M200),rho_E_f.error_M200/(rho_E_f.M200*np.log(10.)),
+                    rho_E_f.c200,rho_E_f.error_c200,rho_E_f.res,mrhoe.sum(),
+                    np.log10(S_f.M200),S_f.error_M200/(S_f.M200*np.log(10.)),
+                    S_f.c200,S_f.error_c200,S_f.res,mS.sum(),
+                    np.log10(S_E_f.M200),S_E_f.error_M200/(S_E_f.M200*np.log(10.)),
+                    S_E_f.c200,S_E_f.error_c200,S_E_f.res,mSe.sum()]
+                    
+         else:
              
-             
-             m = rho_f.xplot > r.min()
-             m1 = rho_E_f.xplot >  r.min()
-             m2 = S_f.xplot >  r.min()
-             m3 = S_E_f.xplot >  r.min()
-             
-         
-             f,ax = plt.subplots()                              
-             ax.fill_between(r,rho+mpV*0.5,rho-mpV*0.5,color='C0',alpha=0.5)
-             ax.plot(r,rho,'C7',lw=2)
-             ax.plot(rho_f.xplot[m],rho_f.yplot[m],'k')
-             ax.fill_between(r,rho_E+mpV*0.5,rho_E-mpV*0.5,color='C1',alpha=0.5)
-             ax.plot(r,rho_E,'C7--',lw=2)
-             ax.plot(rho_E_f.xplot[m1],rho_E_f.yplot[m1],'k--')
-             
-             
-             f2,ax2 = plt.subplots()                 
-             ax2.fill_between(r,S+mpA*0.5,S-mpA*0.5,color='C0',alpha=0.5)
-             ax2.plot(r,S,'C7',lw=2)
-             ax2.fill_between(r,S_E+mpA*0.5,S_E-mpA*0.5,color='C1',alpha=0.5)
-             ax2.plot(r,S_E,'C7--',lw=2)
-             ax2.plot(S_f.xplot[m2],S_f.yplot[m2],'k')
-             ax2.plot(S_E_f.xplot[m3],S_E_f.yplot[m3],'k--')
-         
-             ax.set_xscale('log')
-             ax.set_yscale('log')
-             ax2.set_xscale('log')
-             ax2.set_yscale('log')
-             ax.set_ylabel(r'$\rho [M_\odot h^2/Mpc^3]$')
-             ax.set_xlabel('$r[Mpc/h]$')
-             ax2.set_ylabel(r'$\Sigma [M_\odot h/Mpc^2]$')
-             ax2.set_xlabel('$R[Mpc/h]$')
-         
-         
-             print(0.7*(pro[1]/1000.))
-             print(np.log10(rho_f.M200),rho_f.c200)
-         
-             input("Press Enter to continue...")
-         
-             plt.close('all')
-         
-         
-         return [np.log10(MDelta),Delta,
-                 np.log10(rho_f.M200),rho_f.error_M200/(rho_f.M200*np.log(10.)),
-                 rho_f.c200,rho_f.error_c200,rho_f.res,mrho.sum(),
-                 np.log10(rho_E_f.M200),rho_E_f.error_M200/(rho_E_f.M200*np.log(10.)),
-                 rho_E_f.c200,rho_E_f.error_c200,rho_E_f.res,mrhoe.sum(),
-                 np.log10(S_f.M200),S_f.error_M200/(S_f.M200*np.log(10.)),
-                 S_f.c200,S_f.error_c200,S_f.res,mS.sum(),
-                 np.log10(S_E_f.M200),S_E_f.error_M200/(S_E_f.M200*np.log(10.)),
-                 S_E_f.c200,S_E_f.error_c200,S_E_f.res,mSe.sum()]
+            return np.zeros(26)
                           
 
 def run_fit_profile(index):
