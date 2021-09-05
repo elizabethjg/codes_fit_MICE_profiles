@@ -10,6 +10,7 @@ import astropy.units as u
 import pandas as pd
 from models_profiles import *
 cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
+from scipy import stats
 
 part = '4_4'
 # part = '8_5'
@@ -31,6 +32,37 @@ zhalos = np.array(main.redshift)
 
 
 nrings = 10
+
+def q_75(y):
+    return np.quantile(y, 0.75)
+
+def q_25(y):
+    return np.quantile(y, 0.25)
+
+
+def binned(x,y,nbins=10):
+    
+    
+    bined = stats.binned_statistic(x,y,statistic='median', bins=nbins)
+    x_b = 0.5*(bined.bin_edges[:-1] + bined.bin_edges[1:])
+    q50     = bined.statistic
+    
+    bined = stats.binned_statistic(x,y,statistic=q_25, bins=nbins)
+    q25     = bined.statistic
+
+    bined = stats.binned_statistic(x,y,statistic=q_75, bins=nbins)
+    q75     = bined.statistic
+    
+    dig   = np.digitize(x,bined.bin_edges)
+    mz    = np.ones(len(x))
+    for j in range(nbins):
+        mbin = dig == (j+1)
+        mz[mbin] = y[mbin] >= q50[j]   
+    mz = mz.astype(bool)
+    return x_b,q50,q25,q75,mz
+            
+
+
 
 def fit_profile(pro,z,plot=True,halo=''):
     
@@ -168,16 +200,24 @@ lmcut = 'M125'
 # RELAXATION 
 m = mcut#*(zhalos < 0.7)
 
+x,q50,q25,q75,nada = binned(zhalos[m],(rc/main.r_max)[m],20)
 plt.figure()
-plt.scatter(zhalos[m],(rc/main.r_max)[m],c=((2.*k2)/abs(u2))[m],alpha=0.3,s=2,vmax=1.35,zorder=2)
+plt.scatter(zhalos[m],(rc/main.r_max)[m],c=((2.*k2)/abs(u2))[m],alpha=0.3,s=1,vmax=1.35,zorder=2)
+plt.plot(x,q50,'C3')
+plt.plot(x,q25,'C3--')
+plt.plot(x,q75,'C3--')
 plt.xlabel('$z$')
 plt.ylabel('$r_c/r_{max}$')
-plt.ylim([0.,0.6])
+plt.ylim([0.,0.3])
 plt.colorbar()
 plt.savefig(plots_path+'01_rc_z_'+part+'_'+lmcut+'.png')
 
+x,q50,q25,q75,nada = binned(zhalos[m],((2.*k2)/abs(u2))[m],20)
 plt.figure()
 plt.scatter(zhalos[m],((2.*k2)/abs(u2))[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3,zorder=2)
+plt.plot(x,q50,'C3')
+plt.plot(x,q25,'C3--')
+plt.plot(x,q75,'C3--')
 plt.xlabel('$z$')
 plt.ylabel('$(2K)/U$')
 plt.ylim([0.5,3])
@@ -186,26 +226,38 @@ plt.colorbar()
 plt.savefig(plots_path+'02_Eratio_z_'+part+'_'+lmcut+'.png')
 
 
+x,q50,q25,q75,nada = binned(main.lgM[m],(rc/main.r_max)[m],20)
 plt.figure()
 plt.scatter(main.lgM[m],(rc/main.r_max)[m],c=((2.*k2)/abs(u2))[m],alpha=0.3,s=2,vmax=1.35,zorder=2)
+plt.plot(x,q50,'C3')
+plt.plot(x,q25,'C3--')
+plt.plot(x,q75,'C3--')
 plt.xlabel(r'$\log M_{FOF}$')
 plt.ylabel('$r_c/r_{max}$')
 plt.ylim([0.,0.6])
 plt.colorbar()
 plt.savefig(plots_path+'03_rc_lgM_'+part+'_'+lmcut+'.png')
 
+x,q50,q25,q75,nada = binned(main.lgM[m],((2.*k2)/abs(u2))[m],20)
 plt.figure()
 plt.scatter(main.lgM[m],((2.*k2)/abs(u2))[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3,zorder=2)
 plt.xlabel(r'$\log M_{FOF}$')
 plt.ylabel('$(2K)/U$')
+plt.plot(x,q50,'C3')
+plt.plot(x,q25,'C3--')
+plt.plot(x,q75,'C3--')
 plt.ylim([0.5,3])
 plt.axhline(1.35)
 plt.colorbar()
 plt.savefig(plots_path+'04_Eratio_lgM_'+part+'_'+lmcut+'.png')
 
+x,q50,q25,q75,nada = binned(rc/main.r_max)[m],((2.*k2)/abs(u2))[m],20)
 plt.figure()
 plt.plot((rc/main.r_max)[m],((2.*k2)/abs(u2))[m],'.')
 plt.axis([0,0.7,0.7,5])
+plt.plot(x,q50,'C3')
+plt.plot(x,q25,'C3--')
+plt.plot(x,q75,'C3--')
 plt.ylabel('$(2K)/U$')
 plt.xlabel('$r_c/r_{max}$')
 plt.savefig(plots_path+'05_rc_Eratio_'+part+'_'+lmcut+'.png')
@@ -243,11 +295,6 @@ msel  = (rc/main.r_max > 0.4)*(main.lgM > 13.5)*(R3D<0.2)
 j =  index[msel][0]
 fit_profile(profiles[j],zhalos[j],plot=True,halo='unrelaxed')
 
-msel  = (s > 0.8)*(q > 0.8)*(main.lgM > 13.0)*(R3D<0.2)
-j =  index[msel][0]
-
-
-
 
 plt.figure()
 plt.scatter(main.lgM[m],R3D[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3,zorder=2)
@@ -261,30 +308,45 @@ plt.savefig(plots_path+'09_Res_'+part+'_'+lmcut+'.png')
 # MASS COMPARISON
 # with FOF
 m = mrho*mcut
+
+x,q50,q25,q75,nada = binned(zhalos[m],10**(lMrho[m] - np.array(main.lgM)[m]),20)
 plt.figure()
 plt.scatter(zhalos[m],10**(lMrho[m] - np.array(main.lgM)[m]),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$z$')
 plt.ylabel('$M_{200}/M_{FOF}$')
+plt.plot(x,q50,'C3')
+plt.plot(x,q25,'C3--')
+plt.plot(x,q75,'C3--')
 plt.ylim([0,1.2])
 plt.axhline(1)
 plt.colorbar()
 plt.savefig(plots_path+'10_M_comparison_3D_'+part+'_'+lmcut+'.png')
 
 m = mrho*mcut*(masses.Delta > 180)*(masses.Delta < 220)
+
+x,q50,q25,q75,nada = binned(10**(lMrho[m] - np.array(masses.lgMDelta.astype(float))[m]),20)
 plt.figure()
 plt.scatter(zhalos[m],10**(lMrho[m] - np.array(masses.lgMDelta.astype(float))[m]),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$z$')
 plt.ylabel('$M_{200}/M_{\Delta}$')
+plt.plot(x,q50,'C3')
+plt.plot(x,q25,'C3--')
+plt.plot(x,q75,'C3--')
 plt.ylim([0.2,2])
 plt.axhline(1)
 plt.colorbar()
 plt.savefig(plots_path+'11_M_comparison_Delta_'+part+'_'+lmcut+'.png')
 
 m = mS*mcut
+
+x,q50,q25,q75,nada = binned(zhalos[m],np.array(10**(lMS[m] - np.array(main.lgM)[m])),20)
 plt.figure()
 plt.scatter(zhalos[m],np.array(10**(lMS[m] - np.array(main.lgM)[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$z$')
 plt.ylim([0,1.2])
+plt.plot(x,q50,'C3')
+plt.plot(x,q25,'C3--')
+plt.plot(x,q75,'C3--')
 plt.ylabel('$M^{2D}_{200}/M_{FOF}$')
 plt.axhline(1)
 plt.colorbar()
@@ -293,38 +355,69 @@ plt.savefig(plots_path+'12_M_comparison_2D_'+part+'_'+lmcut+'.png')
 # 3D vs 2D
 
 m = (mrho*mS)*mcut
+
+x,q50,q25,q75,nada = binned(zhalos[m],np.array(10**(lMrho[m] - lMS[m])),20)
+plt.figure()
+plt.scatter(zhalos[m],np.array(10**(lMrho[m] - lMS[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.xlabel('$z$')
+plt.ylabel('$M_{200}/M^{2D}_{200}$')
+plt.plot(x,q50,'C3')
+plt.plot(x,q25,'C3--')
+plt.plot(x,q75,'C3--')
+plt.ylim([0,3])
+plt.axhline(1)
+plt.colorbar()
+plt.savefig(plots_path+'13_z_M_comparison_project_'+part+'_'+lmcut+'.png')
+
+x,q50,q25,q75,nada = binned(s[m],np.array(10**(lMrho[m] - lMS[m])),20)
 plt.figure()
 plt.scatter(s[m],np.array(10**(lMrho[m] - lMS[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$S=c/a$')
 plt.ylabel('$M_{200}/M^{2D}_{200}$')
+plt.plot(x,q50,'C3')
+plt.plot(x,q25,'C3--')
+plt.plot(x,q75,'C3--')
 plt.ylim([0,3])
 plt.axhline(1)
 plt.colorbar()
 plt.savefig(plots_path+'13_M_comparison_project_'+part+'_'+lmcut+'.png')
 
+x,q50,q25,q75,nada = binned(s[m],(crho/cS)[m],20)
 plt.figure()
 plt.scatter(s[m],(crho/cS)[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$S=c/a$')
 plt.ylabel('$c_{200}/c^{2D}_{200}$')
+plt.plot(x,q50,'C3')
+plt.plot(x,q25,'C3--')
+plt.plot(x,q75,'C3--')
 plt.ylim([-0.5,6])
 plt.axhline(1)
 plt.colorbar()
 plt.savefig(plots_path+'14_c200_comparison_project_'+part+'_'+lmcut+'.png')
 
 m = (mrhoE*mSE)*mcut
+
+x,q50,q25,q75,nada = binned(s[m],np.array(10**(lMrhoE[m] - lMSE[m])),20)
 plt.figure()
 plt.scatter(s[m],np.array(10**(lMrhoE[m] - lMSE[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$S=c/a$')
 plt.ylabel('$M_{200}/M^{2D}_{200}$')
+plt.plot(x,q50,'C3')
+plt.plot(x,q25,'C3--')
+plt.plot(x,q75,'C3--')
 plt.ylim([0,3])
 plt.axhline(1)
 plt.colorbar()
 plt.savefig(plots_path+'15_M_comparison_project_ellip_'+part+'_'+lmcut+'.png')
 
+x,q50,q25,q75,nada = binned(s[m],(crhoE/cSE)[m],20)
 plt.figure()
 plt.scatter(s[m],(crhoE/cSE)[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$S=c/a$')
 plt.ylabel('$c_{200}/c^{2D}_{200}$')
+plt.plot(x,q50,'C3')
+plt.plot(x,q25,'C3--')
+plt.plot(x,q75,'C3--')
 plt.ylim([-0.5,6])
 plt.axhline(1)
 plt.colorbar()
@@ -333,38 +426,56 @@ plt.savefig(plots_path+'16_c200_comparison_project_ellip_'+part+'_'+lmcut+'.png'
 # SPHERICAL VS ELLIPTICAL
 
 m = (mrho*mrhoE)*mcut
+
+x,q50,q25,q75,nada = binned(s[m],np.array(10**(lMrho[m] - lMrhoE[m])),20)
 plt.figure()
 plt.scatter(s[m],np.array(10**(lMrho[m] - lMrhoE[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$S=c/a$')
 plt.ylabel('$M_{200}/M_{200E}$')
+plt.plot(x,q50,'C3')
+plt.plot(x,q25,'C3--')
+plt.plot(x,q75,'C3--')
 plt.ylim([0,3])
 plt.axhline(1)
 plt.colorbar()
 plt.savefig(plots_path+'17_M_comparison_3D_elliptical_'+part+'_'+lmcut+'.png')
 
+x,q50,q25,q75,nada = binned(s[m],(crho/crhoE)[m],20)
 plt.figure()
 plt.scatter(s[m],(crho/crhoE)[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$S=c/a$')
 plt.ylabel('$c_{200}/c_{200E}$')
 plt.ylim([-0.5,6])
+plt.plot(x,q50,'C3')
+plt.plot(x,q25,'C3--')
+plt.plot(x,q75,'C3--')
 plt.axhline(1)
 plt.colorbar()
 plt.savefig(plots_path+'18_c200_comparison_3D_elliptical_'+part+'_'+lmcut+'.png')
 
 
 m = (mS*mSE)*mcut
+
+x,q50,q25,q75,nada = binned(q[m],np.array(10**(lMS[m] - lMSE[m])),20)
 plt.figure()
 plt.scatter(q[m],np.array(10**(lMS[m] - lMSE[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$q=b/a$')
 plt.ylabel('$M^{2D}_{200}/M^{2D}_{200E}$')
 plt.ylim([0,3])
+plt.plot(x,q50,'C3')
+plt.plot(x,q25,'C3--')
+plt.plot(x,q75,'C3--')
 plt.axhline(1)
 plt.colorbar()
 plt.savefig(plots_path+'19_M_comparison_2D_elliptical_'+part+'_'+lmcut+'.png')
 
 
+x,q50,q25,q75,nada = binned(q[m],(cS/cSE)[m],20)
 plt.figure()
 plt.scatter(q[m],(cS/cSE)[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.plot(x,q50,'C3')
+plt.plot(x,q25,'C3--')
+plt.plot(x,q75,'C3--')
 plt.xlabel('$q=b/a$')
 plt.ylabel('$c^{2D}_{200}/c^{2D}_{200E}$')
 plt.ylim([-0.5,6])
