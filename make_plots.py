@@ -26,6 +26,11 @@ plots_path = '/home/elizabeth/plots/'
         
 index = np.arange(len(profiles))
 
+mp = 2.927e10
+zhalos = np.array(main.redshift)
+
+
+nrings = 10
 
 def fit_profile(pro,z,plot=True,halo=''):
     
