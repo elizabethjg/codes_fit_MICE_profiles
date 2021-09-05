@@ -251,7 +251,7 @@ plt.axhline(1.35)
 plt.colorbar()
 plt.savefig(plots_path+'04_Eratio_lgM_'+part+'_'+lmcut+'.png')
 
-x,q50,q25,q75,nada = binned(rc/main.r_max)[m],((2.*k2)/abs(u2))[m],20)
+x,q50,q25,q75,nada = binned((rc/main.r_max)[m],((2.*k2)/abs(u2))[m],20)
 plt.figure()
 plt.plot((rc/main.r_max)[m],((2.*k2)/abs(u2))[m],'.')
 plt.axis([0,0.7,0.7,5])
