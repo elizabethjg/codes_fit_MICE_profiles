@@ -105,7 +105,6 @@ def fit_profile(pro,z,plot=True,halo=''):
              print(np.log10(rho_f.M200),rho_f.c200)
          
          
-r200 = R200_NFW(10**lMrho,zhalos,cosmo=cosmo)*1000.
                  
 lMrho   = np.array(masses.lgM200_rho).astype(float)
 lMrhoE  = np.array(masses.lgM200_rho_E).astype(float)
@@ -132,6 +131,7 @@ mrhoE  = (elMrhoE/lMrhoE < 0.5)*(ecrhoE/crhoE < 0.5)
 mS      = (elMS/lMS < 0.5)*(ecS/cS < 0.5)
 mSE     = (elMSE/lMSE < 0.5)*(ecSE/cSE < 0.5)
     
+r200 = R200_NFW(10**lMrho,zhalos,cosmo=cosmo)*1000.
 
 s    = main.c3D/main.a3D
 q    = main.b3D/main.a3D
