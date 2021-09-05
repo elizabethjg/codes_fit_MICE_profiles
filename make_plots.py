@@ -40,7 +40,7 @@ def fit_profile(pro,z,plot=True,halo=''):
          
          rbins = (np.arange(nrings+1)*(pro[1]/float(nrings)))/1000
          mpV = mp/((4./3.)*np.pi*(rbins[1:]**3 - rbins[:-1]**3)) # mp/V
-         mpA = mp/(np.pi*(rbins[1:]**2 - rbins[:-1]**3)) # mp/A
+         mpA = mp/(np.pi*(rbins[1:]**2 - rbins[:-1]**2)) # mp/A
          
 
          
@@ -55,10 +55,10 @@ def fit_profile(pro,z,plot=True,halo=''):
          MDelta = Msum[j200]
          Delta  = ((Msum/Vsum)/roc_mpc)[j200]
          
-         mrho = (rho > 0.)*(r < 0.7*pro[1]*1.e-3)
-         mS = (S > 0.)*(r < 0.7*pro[1]*1.e-3)
-         mrhoe = (rho_E > 0.)*(r < 0.7*pro[1]*1.e-3)
-         mSe = (S_E > 0.)*(r < 0.7*pro[1]*1.e-3)
+         mrho = (rho > 0.)*(r < 0.7*pro[1]*1.e-3)#*(r > 0.1*pro[1]*1.e-3)
+         mS = (S > 0.)*(r < 0.7*pro[1]*1.e-3)#*(r > 0.1*pro[1]*1.e-3)
+         mrhoe = (rho_E > 0.)*(r < 0.7*pro[1]*1.e-3)#*(r > 0.1*pro[1]*1.e-3)
+         mSe = (S_E > 0.)*(r < 0.7*pro[1]*1.e-3)#*(r > 0.1*pro[1]*1.e-3)
          
          
          # error = 1.e12*np.ones(len(r))
@@ -104,7 +104,7 @@ def fit_profile(pro,z,plot=True,halo=''):
              ax2.set_xlabel('$R[Mpc/h]$')
          
              f.savefig(plots_path+'profile_rho_'+part+'_'+halo+'.png')
-             f2.savefig(plots_path+'profile_S_'+part+'_'+lmcut+'.png')
+             f2.savefig(plots_path+'profile_S_'+part+'_'+halo+'.png')
          
              print(0.7*(pro[1]/1000.))
              print(np.log10(rho_f.M200),rho_f.c200)
@@ -243,6 +243,12 @@ msel  = (rc/main.r_max > 0.4)*(main.lgM > 13.5)*(R3D<0.2)
 j =  index[msel][0]
 fit_profile(profiles[j],zhalos[j],plot=True,halo='unrelaxed')
 
+msel  = (s > 0.8)*(q > 0.8)*(main.lgM > 13.0)*(R3D<0.2)
+j =  index[msel][0]
+
+
+
+
 plt.figure()
 plt.scatter(main.lgM[m],R3D[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3,zorder=2)
 plt.xlabel(r'$\log M_{FOF}$')
@@ -286,7 +292,7 @@ plt.savefig(plots_path+'12_M_comparison_2D_'+part+'_'+lmcut+'.png')
 
 # 3D vs 2D
 
-m = (mrho*mS)*mcut*(zhalos < 0.7)
+m = (mrho*mS)*mcut
 plt.figure()
 plt.scatter(s[m],np.array(10**(lMrho[m] - lMS[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$S=c/a$')
