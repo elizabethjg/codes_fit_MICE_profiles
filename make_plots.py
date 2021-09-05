@@ -166,7 +166,7 @@ lmcut = 'M125'
 
 
 # RELAXATION 
-m = mcut*(zhalos < 0.7)
+m = mcut#*(zhalos < 0.7)
 
 plt.figure()
 plt.scatter(zhalos[m],(rc/main.r_max)[m],c=((2.*k2)/abs(u2))[m],alpha=0.3,s=2,vmax=1.35,zorder=2)
