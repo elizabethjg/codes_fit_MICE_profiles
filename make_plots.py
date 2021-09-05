@@ -266,7 +266,7 @@ plt.savefig(plots_path+'10_M_comparison_3D_'+part+'_'+lmcut+'.png')
 
 m = mrho*mcut*(masses.Delta > 180)*(masses.Delta < 220)
 plt.figure()
-plt.scatter(zhalos[m],10**(lMrho[m] - np.array(masses.MDelta.astype(float))[m]),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.scatter(zhalos[m],10**(lMrho[m] - np.array(masses.lgMDelta.astype(float))[m]),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$z$')
 plt.ylabel('$M_{200}/M_{\Delta}$')
 plt.ylim([0.2,2])
