@@ -9,7 +9,7 @@ from multiprocessing import Process
 import astropy.units as u
 import pandas as pd
 # part = '8_5'
-part = '8_5'
+part = '8_5_2'
 cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 
 # hn = fits.open('../catalogs/halo_props/halo_props2_'+part+'_2_main_plus.fits')[1].data.Halo_number
