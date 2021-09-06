@@ -188,8 +188,8 @@ R3D  = np.array(masses.R3D.astype(float))
 R2D  = np.array(masses.R2D.astype(float))
 
 
-k2 = np.array(main.Ekin)
-u2 = np.array(main.Epot)
+k2 = np.array(main.EKin)
+u2 = np.array(main.EPot)
 
 mrelax2 = ((2.*k2)/abs(u2)) < 1.35
 
