@@ -58,10 +58,10 @@ def fit_profile(pro,z,plot=False):
          MDelta = Msum[j200]
          Delta  = ((Msum/Vsum)/roc_mpc)[j200]
          
-         mrho = (rho > 0.)*(r < 0.7*pro[1]*1.e-3)
-         mS = (S > 0.)*(r < 0.7*pro[1]*1.e-3)
-         mrhoe = (rho_E > 0.)*(r < 0.7*pro[1]*1.e-3)
-         mSe = (S_E > 0.)*(r < 0.7*pro[1]*1.e-3)
+         mrho = (rho > 0.)#*(r < 0.7*pro[1]*1.e-3)
+         mS = (S > 0.)#*(r < 0.7*pro[1]*1.e-3)
+         mrhoe = (rho_E > 0.)#*(r < 0.7*pro[1]*1.e-3)
+         mSe = (S_E > 0.)#*(r < 0.7*pro[1]*1.e-3)
          
          
          # error = 1.e12*np.ones(len(r))

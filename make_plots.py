@@ -15,9 +15,9 @@ from scipy import stats
 # part = '4_4'
 part = '8_5_2'
 
-main = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2') 
-profiles = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
-masses = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass.csv.bz2') 
+main2 = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2') 
+profiles2 = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
+masses2 = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass.csv.bz2') 
 zhalos = main.redshift
 
 rc = np.array(np.sqrt((main.xc - main.xc_rc)**2 + (main.yc - main.yc_rc)**2 + (main.zc - main.zc_rc)**2))
@@ -117,6 +117,7 @@ def fit_profile(pro,z,plot=True,halo=''):
              ax.plot(r,rho_E,'C7--',lw=2)
              ax.plot(rho_E_f.xplot[m1],rho_E_f.yplot[m1],'k--')
              ax.legend()
+             ax.axvline(0.7*pro[1]*1.e-3)
              
              f2,ax2 = plt.subplots()                 
              ax2.fill_between(r,S+mpA*0.5,S-mpA*0.5,color='C0',alpha=0.5)
@@ -126,6 +127,8 @@ def fit_profile(pro,z,plot=True,halo=''):
              ax2.plot(S_f.xplot[m2],S_f.yplot[m2],'k')
              ax2.plot(S_E_f.xplot[m3],S_E_f.yplot[m3],'k--')
              ax2.legend()
+             ax2.axvline(0.7*pro[1]*1.e-3)
+             
              ax.set_xscale('log')
              ax.set_yscale('log')
              ax2.set_xscale('log')
@@ -295,6 +298,9 @@ msel  = (rc/main.r_max > 0.4)*(main.lgM > 13.5)*(R3D<0.2)
 j =  index[msel][0]
 fit_profile(profiles[j],zhalos[j],plot=True,halo='unrelaxed')
 
+
+msel  = (main.lgM > 13.5)*(masses2.R3D.astype(float)>1.0)
+j =  index[msel][0]
 
 plt.figure()
 plt.scatter(main.lgM[m],R2D[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3,zorder=2)
