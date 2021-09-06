@@ -305,6 +305,7 @@ plt.colorbar()
 plt.savefig(plots_path+'09_Res_'+part+'_'+lmcut+'.png')
 
 x,q50,q25,q75,nada = binned(zhalos[m],R3D[m],20)
+plt.figure()
 plt.scatter(zhalos[m],R3D[m],c=(rc/main.r_max)[m],alpha=0.3,s=4,vmax=0.3,zorder=2)
 plt.plot(x,q50,'C3')
 plt.plot(x,q25,'C3--')
@@ -317,6 +318,7 @@ plt.savefig(plots_path+'09_Res_z_'+part+'_'+lmcut+'.png')
 
 
 x,q50,q25,q75,nada = binned((rc/main.r_max)[m],R3D[m],20)
+plt.figure()
 plt.scatter((rc/main.r_max)[m],R3D[m],c=(rc/main.r_max)[m],alpha=0.3,s=4,vmax=0.3,zorder=2)
 plt.plot(x,q50,'C3')
 plt.plot(x,q25,'C3--')
