@@ -15,9 +15,9 @@ from scipy import stats
 # part = '4_4'
 part = '8_5_2'
 
-main2 = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2') 
-profiles2 = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
-masses2 = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass.csv.bz2') 
+main = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2') 
+profiles = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
+masses = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass.csv.bz2') 
 zhalos = main.redshift
 
 rc = np.array(np.sqrt((main.xc - main.xc_rc)**2 + (main.yc - main.yc_rc)**2 + (main.zc - main.zc_rc)**2))
@@ -31,7 +31,7 @@ mp = 2.927e10
 zhalos = np.array(main.redshift)
 
 
-nrings = 10
+nrings = 25
 
 def q_75(y):
     return np.quantile(y, 0.75)
@@ -70,7 +70,11 @@ def fit_profile(pro,z,plot=True,halo=''):
      
          r   = pro[2:2+nrings]/1.e3         
          
-         rbins = (np.arange(nrings+1)*(pro[1]/float(nrings)))/1000
+         a_t = 1./(1.+ z)
+         
+         # rbins = ((np.arange(nrings+1)*((0.7*a_t*pro[1]-20)/float(nrings)))+20.)/1000
+         rin = 25.
+         rbins = ((np.arange(nrings+1)*((800.-rin)/float(nrings)))+rin)/1000.
          mpV = mp/((4./3.)*np.pi*(rbins[1:]**3 - rbins[:-1]**3)) # mp/V
          mpA = mp/(np.pi*(rbins[1:]**2 - rbins[:-1]**2)) # mp/A
          
@@ -87,62 +91,64 @@ def fit_profile(pro,z,plot=True,halo=''):
          MDelta = Msum[j200]
          Delta  = ((Msum/Vsum)/roc_mpc)[j200]
          
-         mrho = (rho > 0.)*(r < 0.7*pro[1]*1.e-3)#*(r > 0.1*pro[1]*1.e-3)
-         mS = (S > 0.)*(r < 0.7*pro[1]*1.e-3)#*(r > 0.1*pro[1]*1.e-3)
-         mrhoe = (rho_E > 0.)*(r < 0.7*pro[1]*1.e-3)#*(r > 0.1*pro[1]*1.e-3)
-         mSe = (S_E > 0.)*(r < 0.7*pro[1]*1.e-3)#*(r > 0.1*pro[1]*1.e-3)
+         mrho = (rho > 0.)#*(r < 0.7*pro[1]*1.e-3)
+         mS = (S > 0.)#*(r < 0.7*pro[1]*1.e-3)
+         mrhoe = (rho_E > 0.)#*(r < 0.7*pro[1]*1.e-3)
+         mSe = (S_E > 0.)#*(r < 0.7*pro[1]*1.e-3)
          
          
          # error = 1.e12*np.ones(len(r))
          
-         rho_f    = rho_fit(r[mrho],rho[mrho],mpV[mrho],z,cosmo,True)
-         rho_E_f    = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z,cosmo,True)
-         S_f      = Sigma_fit(r[mS],S[mS],mpA[mS],z,cosmo,True)
-         S_E_f      = Sigma_fit(r[mSe],S_E[mSe],mpA[mSe],z,cosmo,True)
+         if mrho.sum() > 0. and mS.sum() > 0. and mrhoe.sum() > 0. and mSe.sum() > 0.:
+
+            rho_f    = rho_fit(r[mrho],rho[mrho],mpV[mrho],z,cosmo,True)
+            rho_E_f    = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z,cosmo,True)
+            S_f      = Sigma_fit(r[mS],S[mS],mpA[mS],z,cosmo,True)
+            S_E_f      = Sigma_fit(r[mSe],S_E[mSe],mpA[mSe],z,cosmo,True)
+            
+            if plot:
+                
+                
+                m = rho_f.xplot > min(r[r>0])
+                m1 = rho_E_f.xplot >  min(r[r>0])
+                m2 = S_f.xplot >  min(r[r>0])
+                m3 = S_E_f.xplot >  min(r[r>0])
+                
+            
+                f,ax = plt.subplots()                              
+                ax.fill_between(r[mrho],(rho+mpV*0.5)[mrho],(rho-mpV*0.5)[mrho],color='C0',alpha=0.5)
+                ax.plot(r[mrho],rho[mrho],'C7',lw=2)
+                ax.plot(rho_f.xplot[m],rho_f.yplot[m],'k')
+                ax.fill_between(r[mrhoe],(rho_E+mpV*0.5)[mrhoe],(rho_E-mpV*0.5)[mrhoe],color='C1',alpha=0.5)
+                ax.plot(r[mrhoe],rho_E[mrhoe],'C7--',lw=2)
+                ax.plot(rho_E_f.xplot[m1],rho_E_f.yplot[m1],'k--')
+                ax.axvline(0.7*a_t*pro[1]*1.e-3)
+                
+                f2,ax2 = plt.subplots()                 
+                ax2.fill_between(r[mS],(S+mpA*0.5)[mS],(S-mpA*0.5)[mS],color='C0',alpha=0.5)
+                ax2.plot(r[mS],S[mS],'C7',lw=2)
+                ax2.fill_between(r[mSe],(S_E+mpA*0.5)[mSe],(S_E-mpA*0.5)[mSe],color='C1',alpha=0.5)
+                ax2.plot(r[mSe],S_E[mSe],'C7--',lw=2)
+                ax2.plot(S_f.xplot[m2],S_f.yplot[m2],'k')
+                ax2.plot(S_E_f.xplot[m3],S_E_f.yplot[m3],'k--')
+                ax2.axvline(0.7*a_t*pro[1]*1.e-3)
+            
+                ax.set_xscale('log')
+                ax.set_yscale('log')
+                ax2.set_xscale('log')
+                ax2.set_yscale('log')
+                ax.set_ylabel(r'$\rho [M_\odot h^2/Mpc^3]$')
+                ax.set_xlabel('$r[Mpc/h]$')
+                ax2.set_ylabel(r'$\Sigma [M_\odot h/Mpc^2]$')
+                ax2.set_xlabel('$R[Mpc/h]$')
+            
+            
+                print(0.7*(pro[1]/1000.))
+                print(np.log10(rho_f.M200),rho_f.c200)
          
-         if plot:
-             
-             
-             m = rho_f.xplot > r.min()
-             m1 = rho_E_f.xplot >  r.min()
-             m2 = S_f.xplot >  r.min()
-             m3 = S_E_f.xplot >  r.min()
-             
+                f.savefig(plots_path+'profile_rho_'+part+'_'+halo+'.png')
+                f2.savefig(plots_path+'profile_S_'+part+'_'+halo+'.png')
          
-             f,ax = plt.subplots()                              
-             ax.fill_between(r,rho+mpV*0.5,rho-mpV*0.5,color='C0',alpha=0.5)
-             ax.plot(r,rho,'C7',lw=2,label=halo)
-             ax.plot(rho_f.xplot[m],rho_f.yplot[m],'k')
-             ax.fill_between(r,rho_E+mpV*0.5,rho_E-mpV*0.5,color='C1',alpha=0.5)
-             ax.plot(r,rho_E,'C7--',lw=2)
-             ax.plot(rho_E_f.xplot[m1],rho_E_f.yplot[m1],'k--')
-             ax.legend()
-             ax.axvline(0.7*pro[1]*1.e-3)
-             
-             f2,ax2 = plt.subplots()                 
-             ax2.fill_between(r,S+mpA*0.5,S-mpA*0.5,color='C0',alpha=0.5)
-             ax2.plot(r,S,'C7',lw=2,label=halo)
-             ax2.fill_between(r,S_E+mpA*0.5,S_E-mpA*0.5,color='C1',alpha=0.5)
-             ax2.plot(r,S_E,'C7--',lw=2)
-             ax2.plot(S_f.xplot[m2],S_f.yplot[m2],'k')
-             ax2.plot(S_E_f.xplot[m3],S_E_f.yplot[m3],'k--')
-             ax2.legend()
-             ax2.axvline(0.7*pro[1]*1.e-3)
-             
-             ax.set_xscale('log')
-             ax.set_yscale('log')
-             ax2.set_xscale('log')
-             ax2.set_yscale('log')
-             ax.set_ylabel(r'$\rho [M_\odot h^2/Mpc^3]$')
-             ax.set_xlabel('$r[Mpc/h]$')
-             ax2.set_ylabel(r'$\Sigma [M_\odot h/Mpc^2]$')
-             ax2.set_xlabel('$R[Mpc/h]$')
-         
-             f.savefig(plots_path+'profile_rho_'+part+'_'+halo+'.png')
-             f2.savefig(plots_path+'profile_S_'+part+'_'+halo+'.png')
-         
-             print(0.7*(pro[1]/1000.))
-             print(np.log10(rho_f.M200),rho_f.c200)
          
          
                  
@@ -196,7 +202,7 @@ u2 = np.array(main.EPot)
 
 mrelax2 = ((2.*k2)/abs(u2)) < 1.35
 
-mcut = (main.lgM > 12.5)#*mrelax
+mcut = np.array(main.lgM > 12.5)#*mrelax
 lmcut = 'M125'
 
 
@@ -290,17 +296,15 @@ plt.colorbar()
 plt.savefig(plots_path+'08_q2d_'+part+'_'+lmcut+'.png')
 
 # PROFILES 
-msel  = (rc/main.r_max < 0.05)*(main.lgM > 13.5)*(R3D>0.4)
-j =  index[msel][0]
-fit_profile(profiles[j],zhalos[j],plot=True,halo='relaxed')
 
 msel  = (rc/main.r_max > 0.4)*(main.lgM > 13.5)*(R3D<0.2)
 j =  index[msel][0]
 fit_profile(profiles[j],zhalos[j],plot=True,halo='unrelaxed')
 
-
-msel  = (main.lgM > 13.5)*(masses2.R3D.astype(float)>1.0)
+msel  = (rc/main.r_max < 0.05)*(main.lgM > 13.5)*(R3D<0.3)
 j =  index[msel][0]
+fit_profile(profiles[j],zhalos[j],plot=True,halo='relaxed')
+
 
 plt.figure()
 plt.scatter(main.lgM[m],R2D[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3,zorder=2)
@@ -310,7 +314,7 @@ plt.ylim([0.,1])
 plt.colorbar()
 plt.savefig(plots_path+'09_Res_'+part+'_'+lmcut+'.png')
 
-x,q50,q25,q75,nada = binned(zhalos[m],R3D[m],20)
+x,q50,q25,q75,nada = binned(zhalos[mR3D],R3D[mR3D],20)
 plt.figure()
 plt.scatter(zhalos[m],R3D[m],c=(rc/main.r_max)[m],alpha=0.3,s=4,vmax=0.3,zorder=2)
 plt.plot(x,q50,'C3')
@@ -323,7 +327,7 @@ plt.colorbar()
 plt.savefig(plots_path+'09_Res_z_'+part+'_'+lmcut+'.png')
 
 
-x,q50,q25,q75,nada = binned((rc/main.r_max)[m],R3D[m],20)
+x,q50,q25,q75,nada = binned(np.array(rc/main.r_max)[mR3D],R3D[mR3D],20)
 plt.figure()
 plt.scatter((rc/main.r_max)[m],R3D[m],c=(rc/main.r_max)[m],alpha=0.3,s=4,vmax=0.3,zorder=2)
 plt.plot(x,q50,'C3')
@@ -353,11 +357,11 @@ plt.axhline(1)
 plt.colorbar()
 plt.savefig(plots_path+'10_M_comparison_3D_'+part+'_'+lmcut+'.png')
 
-m = mrho*mcut*(masses.Delta > 180)*(masses.Delta < 220)
+m = mrho*np.array(mcut)*(masses.Delta > 180)*(masses.Delta < 220)
 
 x,q50,q25,q75,nada = binned(zhalos[m],10**(lMrho[m] - np.array(masses.lgMDelta.astype(float))[m]),20)
 plt.figure()
-plt.scatter(zhalos[m],10**(lMrho[m] - np.array(masses.lgMDelta.astype(float))[m]),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.scatter(zhalos[m],10**(lMrho[m] - np.array(masses.lgMDelta.astype(float))[m]),c=np.array(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$z$')
 plt.ylabel('$M_{200}/M_{\Delta}$')
 plt.plot(x,q50,'C3')
@@ -372,7 +376,7 @@ m = mS*mcut
 
 x,q50,q25,q75,nada = binned(zhalos[m],np.array(10**(lMS[m] - np.array(main.lgM)[m])),20)
 plt.figure()
-plt.scatter(zhalos[m],np.array(10**(lMS[m] - np.array(main.lgM)[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.scatter(zhalos[m],np.array(10**(lMS[m] - np.array(main.lgM)[m])),c=np.array(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$z$')
 plt.ylim([0,1.2])
 plt.plot(x,q50,'C3')
@@ -389,7 +393,7 @@ m = (mrho*mS)*mcut
 
 x,q50,q25,q75,nada = binned(zhalos[m],np.array(10**(lMrho[m] - lMS[m])),20)
 plt.figure()
-plt.scatter(zhalos[m],np.array(10**(lMrho[m] - lMS[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.scatter(zhalos[m],np.array(10**(lMrho[m] - lMS[m])),c=np.array(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$z$')
 plt.ylabel('$M_{200}/M^{2D}_{200}$')
 plt.plot(x,q50,'C3')
@@ -402,7 +406,7 @@ plt.savefig(plots_path+'13_z_M_comparison_project_'+part+'_'+lmcut+'.png')
 
 x,q50,q25,q75,nada = binned(s[m],np.array(10**(lMrho[m] - lMS[m])),20)
 plt.figure()
-plt.scatter(s[m],np.array(10**(lMrho[m] - lMS[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.scatter(s[m],np.array(10**(lMrho[m] - lMS[m])),c=np.array(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$S=c/a$')
 plt.ylabel('$M_{200}/M^{2D}_{200}$')
 plt.plot(x,q50,'C3')
@@ -415,7 +419,7 @@ plt.savefig(plots_path+'13_M_comparison_project_'+part+'_'+lmcut+'.png')
 
 x,q50,q25,q75,nada = binned(s[m],(crho/cS)[m],20)
 plt.figure()
-plt.scatter(s[m],(crho/cS)[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.scatter(s[m],(crho/cS)[m],c=np.array(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$S=c/a$')
 plt.ylabel('$c_{200}/c^{2D}_{200}$')
 plt.plot(x,q50,'C3')
@@ -428,7 +432,7 @@ plt.savefig(plots_path+'14_c200_comparison_project_'+part+'_'+lmcut+'.png')
 
 x,q50,q25,q75,nada = binned(zhalos[m],(crho/cS)[m],20)
 plt.figure()
-plt.scatter(zhalos[m],(crho/cS)[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.scatter(zhalos[m],(crho/cS)[m],c=np.array(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$z$')
 plt.ylabel('$c_{200}/c^{2D}_{200}$')
 plt.plot(x,q50,'C3')
@@ -444,7 +448,7 @@ m = (mrhoE*mSE)*mcut
 
 x,q50,q25,q75,nada = binned(s[m],np.array(10**(lMrhoE[m] - lMSE[m])),20)
 plt.figure()
-plt.scatter(s[m],np.array(10**(lMrhoE[m] - lMSE[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.scatter(s[m],np.array(10**(lMrhoE[m] - lMSE[m])),c=np.array(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$S=c/a$')
 plt.ylabel('$M_{200}/M^{2D}_{200}$')
 plt.plot(x,q50,'C3')
@@ -457,7 +461,7 @@ plt.savefig(plots_path+'15_M_comparison_project_ellip_'+part+'_'+lmcut+'.png')
 
 x,q50,q25,q75,nada = binned(s[m],(crhoE/cSE)[m],20)
 plt.figure()
-plt.scatter(s[m],(crhoE/cSE)[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.scatter(s[m],(crhoE/cSE)[m],c=np.array(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$S=c/a$')
 plt.ylabel('$c_{200}/c^{2D}_{200}$')
 plt.plot(x,q50,'C3')
@@ -474,7 +478,7 @@ m = (mrho*mrhoE)*mcut
 
 x,q50,q25,q75,nada = binned(s[m],np.array(10**(lMrho[m] - lMrhoE[m])),20)
 plt.figure()
-plt.scatter(s[m],np.array(10**(lMrho[m] - lMrhoE[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.scatter(s[m],np.array(10**(lMrho[m] - lMrhoE[m])),c=np.array(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$S=c/a$')
 plt.ylabel('$M_{200}/M_{200E}$')
 plt.plot(x,q50,'C3')
@@ -487,7 +491,7 @@ plt.savefig(plots_path+'17_M_comparison_3D_elliptical_'+part+'_'+lmcut+'.png')
 
 x,q50,q25,q75,nada = binned(s[m],(crho/crhoE)[m],20)
 plt.figure()
-plt.scatter(s[m],(crho/crhoE)[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.scatter(s[m],(crho/crhoE)[m],c=np.array(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$S=c/a$')
 plt.ylabel('$c_{200}/c_{200E}$')
 plt.ylim([-0.5,6])
@@ -503,7 +507,7 @@ m = (mS*mSE)*mcut
 
 x,q50,q25,q75,nada = binned(q[m],np.array(10**(lMS[m] - lMSE[m])),20)
 plt.figure()
-plt.scatter(q[m],np.array(10**(lMS[m] - lMSE[m])),c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.scatter(q[m],np.array(10**(lMS[m] - lMSE[m])),c=np.array(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.xlabel('$q=b/a$')
 plt.ylabel('$M^{2D}_{200}/M^{2D}_{200E}$')
 plt.ylim([0,3])
@@ -517,7 +521,7 @@ plt.savefig(plots_path+'19_M_comparison_2D_elliptical_'+part+'_'+lmcut+'.png')
 
 x,q50,q25,q75,nada = binned(q[m],(cS/cSE)[m],20)
 plt.figure()
-plt.scatter(q[m],(cS/cSE)[m],c=(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.scatter(q[m],(cS/cSE)[m],c=np.array(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
 plt.plot(x,q50,'C3')
 plt.plot(x,q25,'C3--')
 plt.plot(x,q75,'C3--')

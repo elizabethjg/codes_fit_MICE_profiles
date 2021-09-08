@@ -2,7 +2,7 @@ import sys
 sys.path.append('/mnt/projects/lensing/lens_codes_v3.7')
 import numpy as np
 from astropy.io import fits
-from astropy.cosmology import LambdaCDM, z_at_value
+from astropy.cosmology import LambdaCDM
 from fit_profiles_curvefit import *
 from multiprocessing import Pool
 from multiprocessing import Process
@@ -17,19 +17,19 @@ cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 # profiles = np.loadtxt('../catalogs/halo_props/halo_props2_'+part+'.csv_profile.bz2',skiprows=1,delimiter=',')
 
 ncores = 32
-main = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2')
-profiles = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
+main0 = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2')
+profiles0 = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
 
-# j = np.argsort(np.array(main0.lgM))[-10000:]
-# main = main0.loc[j]
-# profiles = profiles0[j]
+j = np.argsort(np.array(main0.lgM))[-50000:]
+main = main0.loc[j]
+profiles = profiles0[j]
 
 
 mp = 2.927e10
 zhalos = np.array(main.redshift)
 
 
-nrings = 10
+nrings = 25
 
 index = np.arange(len(profiles))
 
@@ -41,7 +41,11 @@ def fit_profile(pro,z,plot=False):
      
          r   = pro[2:2+nrings]/1.e3         
          
-         rbins = (np.arange(nrings+1)*(pro[1]/float(nrings)))/1000
+         a_t = 1./(1.+ z)
+         
+         # rbins = ((np.arange(nrings+1)*((0.7*a_t*pro[1]-20)/float(nrings)))+20.)/1000
+         rin = 20.
+         rbins = ((np.arange(nrings+1)*((1000.-rin)/float(nrings)))+rin)/1000.
          mpV = mp/((4./3.)*np.pi*(rbins[1:]**3 - rbins[:-1]**3)) # mp/V
          mpA = mp/(np.pi*(rbins[1:]**2 - rbins[:-1]**2)) # mp/A
          
@@ -83,21 +87,22 @@ def fit_profile(pro,z,plot=False):
                 
             
                 f,ax = plt.subplots()                              
-                ax.fill_between(r,rho+mpV*0.5,rho-mpV*0.5,color='C0',alpha=0.5)
-                ax.plot(r,rho,'C7',lw=2)
+                ax.fill_between(r[mrho],(rho+mpV*0.5)[mrho],(rho-mpV*0.5)[mrho],color='C0',alpha=0.5)
+                ax.plot(r[mrho],rho[mrho],'C7',lw=2)
                 ax.plot(rho_f.xplot[m],rho_f.yplot[m],'k')
-                ax.fill_between(r,rho_E+mpV*0.5,rho_E-mpV*0.5,color='C1',alpha=0.5)
-                ax.plot(r,rho_E,'C7--',lw=2)
+                ax.fill_between(r[mrhoe],(rho_E+mpV*0.5)[mrhoe],(rho_E-mpV*0.5)[mrhoe],color='C1',alpha=0.5)
+                ax.plot(r[mrhoe],rho_E[mrhoe],'C7--',lw=2)
                 ax.plot(rho_E_f.xplot[m1],rho_E_f.yplot[m1],'k--')
-                
+                ax.axvline(0.7*a_t*pro[1]*1.e-3)
                 
                 f2,ax2 = plt.subplots()                 
-                ax2.fill_between(r,S+mpA*0.5,S-mpA*0.5,color='C0',alpha=0.5)
-                ax2.plot(r,S,'C7',lw=2)
-                ax2.fill_between(r,S_E+mpA*0.5,S_E-mpA*0.5,color='C1',alpha=0.5)
-                ax2.plot(r,S_E,'C7--',lw=2)
+                ax2.fill_between(r[mS],(S+mpA*0.5)[mS],(S-mpA*0.5)[mS],color='C0',alpha=0.5)
+                ax2.plot(r[mS],S[mS],'C7',lw=2)
+                ax2.fill_between(r[mSe],(S_E+mpA*0.5)[mSe],(S_E-mpA*0.5)[mSe],color='C1',alpha=0.5)
+                ax2.plot(r[mSe],S_E[mSe],'C7--',lw=2)
                 ax2.plot(S_f.xplot[m2],S_f.yplot[m2],'k')
                 ax2.plot(S_E_f.xplot[m3],S_E_f.yplot[m3],'k--')
+                ax2.axvline(0.7*a_t*pro[1]*1.e-3)
             
                 ax.set_xscale('log')
                 ax.set_yscale('log')
