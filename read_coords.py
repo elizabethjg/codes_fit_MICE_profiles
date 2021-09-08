@@ -22,8 +22,11 @@ rc = np.array(np.sqrt((main.xc - main.xc_rc)**2 + (main.yc - main.yc_rc)**2 + (m
 
 relax = rc/np.array(main.r_max)
 
-ratio1 = np.array([])
-ratio2 = np.array([])
+ratioc = np.array([])
+ratioM = np.array([])
+
+R3D = np.zeros(nrings)
+R2D = np.zeros(nrings)
 
 for halo in range(len(list_n)):
 
@@ -46,8 +49,8 @@ for halo in range(len(list_n)):
     
     
     nhalos = 0
-    for j in range(len(list_n)):
-    # for j in [halo]:
+    # for j in range(len(list_n)):
+    for j in [halo]:
         
         # if relax[j] < 0.1:
         
@@ -86,8 +89,8 @@ for halo in range(len(list_n)):
             # continue
         
         
-    nrings = 25
-    rin = 20.
+    nrings = 20
+    rin = 10.
     mp = 2.927e10
     step = (800.-rin)/float(nrings)
     
@@ -96,17 +99,18 @@ for halo in range(len(list_n)):
     q2 = 1.
     
     rhop = np.zeros(nrings)
-    Sp2 = np.zeros(nrings)
+
     Sp = np.zeros(nrings)
     rp = np.zeros(nrings)
     mpV = np.zeros(nrings)
     mpA = np.zeros(nrings)
     
+    
     Ntot = 0
     
     ring = 0
     
-    while ring < 25 and (rin+step < 0.5*np.mean(RMAX)):
+    while ring < (nrings-1) and (rin+step < 0.7*np.mean(RMAX)):
         
         abin_in = rin/(q*s)**(1./3.)
         bbin_in = abin_in*q
@@ -136,17 +140,12 @@ for halo in range(len(list_n)):
     
         rpart_E_in = (Xp**2/abin_in**2 + Yp**2/bbin_in**2)
         rpart_E_out = (Xp**2/abin_out**2 + Yp**2/bbin_out**2)
-    
-        rpart_E_in2 = (X**2/abin_in**2 + Y**2/bbin_in**2)
-        rpart_E_out2 = (X**2/abin_out**2 + Y**2/bbin_out**2)
-        
+            
         A    = np.pi*(((rin+step)/1.e3)**2 - (rin/1.e3)**2)
         mask = (rpart_E_in >= 1)*(rpart_E_out < 1)
-        mask2 = (rpart_E_in2 >= 1)*(rpart_E_out2 < 1)
+
         Sp[ring] = (mask.sum()*mp)/A
-        
-        Sp2[ring] = (mask2.sum()*mp)/A
-    
+           
         mpA[ring] = mp/A
         rin += step
         ring += 1
@@ -155,22 +154,26 @@ for halo in range(len(list_n)):
     
     mr = rhop > 0
     
-    # rho_f    = rho_fit(rp[mr],rhop[mr]/nhalos,mpV[mr],z,cosmo,True) 
-    # S_f      = Sigma_fit(rp[mr],Sp[mr]/nhalos,mpA[mr],z,cosmo,True)
-    # S_f2      = Sigma_fit(rp[mr],Sp2[mr]/nhalos,mpA[mr],z,cosmo,True)
+    rho_f    = rho_fit(rp[mr],rhop[mr]/nhalos,mpV[mr],z,cosmo,True) 
+    S_f      = Sigma_fit(rp[mr],Sp[mr]/nhalos,mpA[mr],z,cosmo,True)
 
-    rho_f    = rho_fit(rp[mr],rhop[mr]/nhalos,np.ones(mr.sum()),z,cosmo,True) 
-    S_f      = Sigma_fit(rp[mr],Sp[mr]/nhalos,np.ones(mr.sum()),z,cosmo,True)
-    S_f2      = Sigma_fit(rp[mr],Sp2[mr]/nhalos,np.ones(mr.sum()),z,cosmo,True)
+
+    # rho_f    = rho_fit(rp[mr],rhop[mr]/nhalos,np.ones(mr.sum()),z,cosmo,True) 
+    # S_f      = Sigma_fit(rp[mr],Sp[mr]/nhalos,np.ones(mr.sum()),z,cosmo,True)
+
     
-    Sf  = Sigma_NFW(rp[mr],z,rho_f.M200,rho_f.c200,cosmo=cosmo)
-    Sf2 = Sigma_NFW(rp[mr],z,S_f.M200,S_f.c200,cosmo=cosmo)
+    Sf_rho  = Sigma_NFW(rp[mr],z,rho_f.M200,rho_f.c200,cosmo=cosmo)
+    Sf = Sigma_NFW(rp[mr],z,S_f.M200,S_f.c200,cosmo=cosmo)
     rhof = rho_NFW(rp[mr],z,rho_f.M200,rho_f.c200,cosmo=cosmo)
 
 
     
-    ratio1 = np.append(ratio1,rho_f.c200/S_f.c200)
-    ratio2 = np.append(ratio2,rho_f.c200/S_f2.c200)
+    ratioc = np.append(ratioc,rho_f.c200/S_f.c200)
+    ratioM = np.append(ratioM,rho_f.M200/S_f.M200)
+    R3D    = np.append(R3D,rho_f.res)
+    R2D    = np.append(R2D,S_f.res)
+
+
     
 
 plt.figure()
