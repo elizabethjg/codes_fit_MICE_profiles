@@ -71,8 +71,8 @@ class rho_fit:
             
             prof = profile_nfw.NFWProfile(rhos = rhos, rs = rs)
             
-            ajuste = prof.surfaceDensity(R*1000.)*(1.e3**2)
-            yplot  = prof.surfaceDensity(xplot*1000.)*(1.e3**2)
+            ajuste = prof.surfaceDensity(R*1000.)*(1.e3**3)
+            yplot  = prof.surfaceDensity(xplot*1000.)*(1.e3**3)
             
             BIN= len(rho)
             
