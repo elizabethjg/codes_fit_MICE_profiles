@@ -64,7 +64,7 @@ class rho_fit:
         
         BIN= len(rho)
         
-        res=np.sqrt(((((np.log10(ajuste)-np.log10(Sigma))**2)).sum())/float(BIN-2))
+        res=np.sqrt(((((np.log10(ajuste)-np.log10(rho))**2)).sum())/float(BIN-2))
         
 
         self.xplot = xplot
