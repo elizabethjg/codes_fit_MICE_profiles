@@ -64,10 +64,10 @@ def fit_profile(pro,z,plot=False):
          MDelta = Msum[j200]
          Delta  = ((Msum/Vsum)/roc_mpc)[j200]
          
-         mrho = (rho > 0.)#*(r < 0.7*pro[1]*1.e-3)
-         mS = (S > 0.)#*(r < 0.7*pro[1]*1.e-3)
-         mrhoe = (rho_E > 0.)#*(r < 0.7*pro[1]*1.e-3)
-         mSe = (S_E > 0.)#*(r < 0.7*pro[1]*1.e-3)
+         mrho = (rho > 0.)#*(r < 0.3)
+         mS = (S > 0.)#*(r < 0.3)
+         mrhoe = (rho_E > 0.)#*(r < 0.3)
+         mSe = (S_E > 0.)#*(r < 0.3)
          
          
          # error = 1.e12*np.ones(len(r))
@@ -83,6 +83,10 @@ def fit_profile(pro,z,plot=False):
             rho_E_f    = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z)
             S_f      = Sigma_fit(r[mS],S[mS],mpA[mS],z)
             S_E_f      = Sigma_fit(r[mSe],S_E[mSe],mpA[mSe],z)
+            rho_f_E    = rho_fit(r[mrho],rho[mrho],mpV[mrho],z,'Einasto')
+            rho_E_f_E    = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z,'Einasto')
+            S_f_E      = Sigma_fit(r[mS],S[mS],mpA[mS],z,'Einasto')
+            S_E_f_E      = Sigma_fit(r[mSe],S_E[mSe],mpA[mSe],z,'Einasto')
             
             if plot:
                 
@@ -96,10 +100,12 @@ def fit_profile(pro,z,plot=False):
                 f,ax = plt.subplots()                              
                 ax.fill_between(r[mrho],(rho+mpV*0.5)[mrho],(rho-mpV*0.5)[mrho],color='C0',alpha=0.5)
                 ax.plot(r[mrho],rho[mrho],'C7',lw=2)
-                ax.plot(rho_f.xplot[m],rho_f.yplot[m],'k')
+                ax.plot(rho_f.xplot[m],rho_f.yplot[m],'C2')
+                ax.plot(rho_f_E.xplot[m],rho_f_E.yplot[m],'C3')
                 ax.fill_between(r[mrhoe],(rho_E+mpV*0.5)[mrhoe],(rho_E-mpV*0.5)[mrhoe],color='C1',alpha=0.5)
                 ax.plot(r[mrhoe],rho_E[mrhoe],'C7--',lw=2)
-                ax.plot(rho_E_f.xplot[m1],rho_E_f.yplot[m1],'k--')
+                ax.plot(rho_E_f.xplot[m1],rho_E_f.yplot[m1],'C2--')
+                ax.plot(rho_E_f_E.xplot[m1],rho_E_f_E.yplot[m1],'C3--')
                 ax.axvline(0.7*a_t*pro[1]*1.e-3)
                 
                 f2,ax2 = plt.subplots()                 
@@ -107,8 +113,10 @@ def fit_profile(pro,z,plot=False):
                 ax2.plot(r[mS],S[mS],'C7',lw=2)
                 ax2.fill_between(r[mSe],(S_E+mpA*0.5)[mSe],(S_E-mpA*0.5)[mSe],color='C1',alpha=0.5)
                 ax2.plot(r[mSe],S_E[mSe],'C7--',lw=2)
-                ax2.plot(S_f.xplot[m2],S_f.yplot[m2],'k')
-                ax2.plot(S_E_f.xplot[m3],S_E_f.yplot[m3],'k--')
+                ax2.plot(S_f.xplot[m2],S_f.yplot[m2],'C2')
+                ax2.plot(S_f_E.xplot[m2],S_f_E.yplot[m2],'C3')
+                ax2.plot(S_E_f.xplot[m3],S_E_f.yplot[m3],'C2--')
+                ax2.plot(S_E_f_E.xplot[m3],S_E_f_E.yplot[m3],'C3--')
                 ax2.axvline(0.7*a_t*pro[1]*1.e-3)
             
                 ax.set_xscale('log')

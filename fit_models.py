@@ -15,20 +15,35 @@ class Sigma_fit:
 	# R en Mpc, Sigma M_Sun/Mpc2
 	
 
-    def __init__(self,R,Sigma,err,z):
+    def __init__(self,R,Sigma,err,z,model='NFW'):
 
 
         xplot   = np.arange(0.001,R.max()+1.,0.001)
+        
+        if model == 'NFW':
 
-        p = profile_nfw.NFWProfile(M = 1.e13, c = 4., z = z, mdef = '200c')
+            p = profile_nfw.NFWProfile(M = 1.e13, c = 4., z = z, mdef = '200c')
+            
+        elif model == 'Einasto':
+            
+            p = profile_einasto.EinastoProfile(M = 1.e13, c = 4., alpha = 1., z = z, mdef = '200c')
+            
 
         try:
         
             out = p.fit(R*1000., Sigma/(1.e3**2), 'Sigma', q_err = err/(1.e3**2))
             
-            rhos,rs = out['x']
             
-            prof = profile_nfw.NFWProfile(rhos = rhos, rs = rs)
+            if model == 'NFW':
+                
+                rhos,rs = out['x']
+                prof = profile_nfw.NFWProfile(rhos = rhos, rs = rs)
+                alpha = -999.
+                
+            elif model == 'Einasto':
+                
+                rhos,rs,alpha = out['x']
+                prof = profile_einasto.EinastoProfile(rhos = rhos, rs = rs, alpha = alpha)
             
             ajuste = prof.surfaceDensity(R*1000.)*(1.e3**2)
             yplot  = prof.surfaceDensity(xplot*1000.)*(1.e3**2)
@@ -45,6 +60,7 @@ class Sigma_fit:
             res   = -999.
             M200  = -999.
             c200  = -999.
+            alpha = -999.
         
 
         self.xplot = xplot
@@ -52,24 +68,41 @@ class Sigma_fit:
         self.res  = res
         self.M200 = M200
         self.c200 = c200
+        self.alpha = alpha
 
 class rho_fit:
 	# R en Mpc, rho M_Sun/Mpc3
 	
 
-    def __init__(self,R,rho,err,z):
+    def __init__(self,R,rho,err,z,model='NFW'):
 
 
         xplot   = np.arange(0.001,R.max()+1.,0.001)
 
-        p = profile_nfw.NFWProfile(M = 1.e13, c = 4., z = z, mdef = '200c')
+        if model == 'NFW':
+
+            p = profile_nfw.NFWProfile(M = 1.e13, c = 4., z = z, mdef = '200c')
+            
+        elif model == 'Einasto':
+            
+            p = profile_einasto.EinastoProfile(M = 1.e13, c = 4., alpha = 1., z = z, mdef = '200c')
+            
 
         try:
         
-            out = p.fit(R*1000., rho/(1.e3**3), 'rho', q_err = err/(1.e3**3))
-            rhos,rs = out['x']
+            out = p.fit(R*1000., rho/(1.e3**3), 'Sigma', q_err = err/(1.e3**3))
             
-            prof = profile_nfw.NFWProfile(rhos = rhos, rs = rs)
+            
+            if model == 'NFW':
+                
+                rhos,rs = out['x']
+                prof = profile_nfw.NFWProfile(rhos = rhos, rs = rs)
+                alpha = -999.
+                
+            elif model == 'Einasto':
+                
+                rhos,rs,alpha = out['x']
+                prof = profile_einasto.EinastoProfile(rhos = rhos, rs = rs, alpha = alpha)
             
             ajuste = prof.density(R*1000.)*(1.e3**3)
             yplot  = prof.density(xplot*1000.)*(1.e3**3)
@@ -86,6 +119,7 @@ class rho_fit:
             res   = -999.
             M200  = -999.
             c200  = -999.
+            alpha = -999.
         
 
         self.xplot = xplot
@@ -93,3 +127,4 @@ class rho_fit:
         self.res  = res
         self.M200 = M200
         self.c200 = c200
+        self.alpha = alpha
