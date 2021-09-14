@@ -9,8 +9,9 @@ from multiprocessing import Process
 import astropy.units as u
 import pandas as pd
 from models_profiles import *
-cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 from scipy import stats
+cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
+
 
 # part = '4_4'
 part = '8_5_2'
@@ -73,8 +74,8 @@ def fit_profile(pro,z,plot=True,halo=''):
          a_t = 1./(1.+ z)
          
          # rbins = ((np.arange(nrings+1)*((0.7*a_t*pro[1]-20)/float(nrings)))+20.)/1000
-         rin = 25.
-         rbins = ((np.arange(nrings+1)*((800.-rin)/float(nrings)))+rin)/1000.
+         rin = 10.
+         rbins = ((np.arange(nrings+1)*((1000.-rin)/float(nrings)))+rin)/1000.
          mpV = mp/((4./3.)*np.pi*(rbins[1:]**3 - rbins[:-1]**3)) # mp/V
          mpA = mp/(np.pi*(rbins[1:]**2 - rbins[:-1]**2)) # mp/A
          
@@ -391,6 +392,34 @@ plt.savefig(plots_path+'12_M_comparison_2D_'+part+'_'+lmcut+'.png')
 
 m = (mrho*mS)*mcut
 
+x,q50,q25,q75,nada = binned(R2D[m],np.array(10**(lMrho[m] - lMS[m])),20)
+plt.figure()
+plt.scatter(R2D[m],np.array(10**(lMrho[m] - lMS[m])),c=np.array(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.ylabel('$M_{200}/M^{2D}_{200}$')
+plt.xlabel('$R2D$')
+plt.plot(x,q50,'C3')
+plt.plot(x,q25,'C3--')
+plt.plot(x,q75,'C3--')
+plt.ylim([0,3])
+plt.axhline(1)
+plt.colorbar()
+plt.savefig(plots_path+'13_M_R2D_comparison_project_'+part+'_'+lmcut+'.png')
+
+
+x,q50,q25,q75,nada = binned(lMrho[m],np.array(10**(lMrho[m] - lMS[m])),20)
+plt.figure()
+plt.scatter(lMrho[m],np.array(10**(lMrho[m] - lMS[m])),c=np.array(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.ylabel('$M_{200}/M^{2D}_{200}$')
+plt.xlabel('$\log(M_{200})$')
+plt.plot(x,q50,'C3')
+plt.plot(x,q25,'C3--')
+plt.plot(x,q75,'C3--')
+plt.ylim([0,3])
+plt.xlim([12,14.5])
+plt.axhline(1)
+plt.colorbar()
+plt.savefig(plots_path+'13_M_M_comparison_project_'+part+'_'+lmcut+'.png')
+
 x,q50,q25,q75,nada = binned(zhalos[m],np.array(10**(lMrho[m] - lMS[m])),20)
 plt.figure()
 plt.scatter(zhalos[m],np.array(10**(lMrho[m] - lMS[m])),c=np.array(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
@@ -402,7 +431,7 @@ plt.plot(x,q75,'C3--')
 plt.ylim([0,3])
 plt.axhline(1)
 plt.colorbar()
-plt.savefig(plots_path+'13_z_M_comparison_project_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'13_M_z_comparison_project_'+part+'_'+lmcut+'.png')
 
 x,q50,q25,q75,nada = binned(s[m],np.array(10**(lMrho[m] - lMS[m])),20)
 plt.figure()
@@ -442,6 +471,33 @@ plt.ylim([-0.5,2])
 plt.axhline(1)
 plt.colorbar()
 plt.savefig(plots_path+'14_c200_z_comparison_project_'+part+'_'+lmcut+'.png')
+
+x,q50,q25,q75,nada = binned(lMrho[m],(crho/cS)[m],20)
+plt.figure()
+plt.scatter(lMrho[m],(crho/cS)[m],c=np.array(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.xlabel('$\log(M_{200})$')
+plt.ylabel('$c_{200}/c^{2D}_{200}$')
+plt.plot(x,q50,'C3')
+plt.plot(x,q25,'C3--')
+plt.plot(x,q75,'C3--')
+plt.ylim([-0.5,2])
+plt.xlim([12,14.5])
+plt.axhline(1)
+plt.colorbar()
+plt.savefig(plots_path+'14_c200_M_comparison_project_'+part+'_'+lmcut+'.png')
+
+x,q50,q25,q75,nada = binned(R2D[m],(crho/cS)[m],20)
+plt.figure()
+plt.scatter(R2D[m],(crho/cS)[m],c=np.array(rc/main.r_max)[m],alpha=0.3,s=2,vmax=0.3)
+plt.xlabel('R2D')
+plt.ylabel('$c_{200}/c^{2D}_{200}$')
+plt.plot(x,q50,'C3')
+plt.plot(x,q25,'C3--')
+plt.plot(x,q75,'C3--')
+plt.ylim([-0.5,2])
+plt.axhline(1)
+plt.colorbar()
+plt.savefig(plots_path+'14_c200_R2D_comparison_project_'+part+'_'+lmcut+'.png')
 
 
 m = (mrhoE*mSE)*mcut

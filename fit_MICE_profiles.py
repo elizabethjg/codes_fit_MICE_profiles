@@ -8,6 +8,7 @@ from multiprocessing import Pool
 from multiprocessing import Process
 import astropy.units as u
 import pandas as pd
+
 # part = '8_5'
 part = '8_5_2'
 cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
@@ -44,7 +45,7 @@ def fit_profile(pro,z,plot=False):
          a_t = 1./(1.+ z)
          
          # rbins = ((np.arange(nrings+1)*((0.7*a_t*pro[1]-20)/float(nrings)))+20.)/1000
-         rin = 20.
+         rin = 10.
          rbins = ((np.arange(nrings+1)*((1000.-rin)/float(nrings)))+rin)/1000.
          mpV = mp/((4./3.)*np.pi*(rbins[1:]**3 - rbins[:-1]**3)) # mp/V
          mpA = mp/(np.pi*(rbins[1:]**2 - rbins[:-1]**2)) # mp/A

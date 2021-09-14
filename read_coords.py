@@ -89,10 +89,10 @@ for halo in range(len(list_n)):
             # continue
         
         
-    nrings = 20
+    nrings = 25
     rin = 10.
     mp = 2.927e10
-    step = (800.-rin)/float(nrings)
+    step = (1000.-rin)/float(nrings)
     
     s = 1.
     q = 1.
