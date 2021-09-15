@@ -1,24 +1,29 @@
 import sys
-sys.path.append('/mnt/projects/lensing/lens_codes_v3.7')
 import numpy as np
 from astropy.io import fits
 from astropy.cosmology import LambdaCDM, z_at_value
-from fit_profiles_curvefit import *
 from multiprocessing import Pool
 from multiprocessing import Process
 import astropy.units as u
 import pandas as pd
-from models_profiles import *
+from fit_models import *
 from scipy import stats
 cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 
 
-# part = '4_4'
-part = '8_5_2'
+part = '4_4'
+# part = '8_5_2'
 
 main = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2') 
 profiles = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
-masses = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass.csv.bz2') 
+masses = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass_sample_random.csv.bz2') 
+
+overlap = main.column_halo_id[np.in1d(main.column_halo_id,masses.column_halo_id)]
+
+main     = main.loc[overlap]
+profiles = profiles[overlap]
+masses   = masses.loc[np.argsort(masses.column_halo_id)]
+
 zhalos = main.redshift
 
 rc = np.array(np.sqrt((main.xc - main.xc_rc)**2 + (main.yc - main.yc_rc)**2 + (main.zc - main.zc_rc)**2))
@@ -101,20 +106,29 @@ def fit_profile(pro,z,plot=True,halo=''):
          MDelta = Msum[j200]
          Delta  = ((Msum/Vsum)/roc_mpc)[j200]
          
-         mrho = (rho > 0.)#*(r < 0.7*pro[1]*1.e-3)
-         mS = (S > 0.)#*(r < 0.7*pro[1]*1.e-3)
-         mrhoe = (rho_E > 0.)#*(r < 0.7*pro[1]*1.e-3)
-         mSe = (S_E > 0.)#*(r < 0.7*pro[1]*1.e-3)
+         mrho = (rho > 0.)#*(r < 0.3)
+         mS = (S > 0.)#*(r < 0.3)
+         mrhoe = (rho_E > 0.)#*(r < 0.3)
+         mSe = (S_E > 0.)#*(r < 0.3)
          
          
          # error = 1.e12*np.ones(len(r))
          
          if mrho.sum() > 0. and mS.sum() > 0. and mrhoe.sum() > 0. and mSe.sum() > 0.:
 
-            rho_f    = rho_fit(r[mrho],rho[mrho],mpV[mrho],z,cosmo,True)
-            rho_E_f    = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z,cosmo,True)
-            S_f      = Sigma_fit(r[mS],S[mS],mpA[mS],z,cosmo,True)
-            S_E_f      = Sigma_fit(r[mSe],S_E[mSe],mpA[mSe],z,cosmo,True)
+            # rho_f    = rho_fit(r[mrho],rho[mrho],mpV[mrho],z,cosmo,True)
+            # rho_E_f    = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z,cosmo,True)
+            # S_f      = Sigma_fit(r[mS],S[mS],mpA[mS],z,cosmo,True)
+            # S_E_f      = Sigma_fit(r[mSe],S_E[mSe],mpA[mSe],z,cosmo,True)
+
+            rho_f    = rho_fit(r[mrho],rho[mrho],mpV[mrho],z)
+            rho_E_f    = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z)
+            S_f      = Sigma_fit(r[mS],S[mS],mpA[mS],z)
+            S_E_f      = Sigma_fit(r[mSe],S_E[mSe],mpA[mSe],z)
+            rho_f_E    = rho_fit(r[mrho],rho[mrho],mpV[mrho],z,'Einasto')
+            rho_E_f_E    = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z,'Einasto')
+            S_f_E      = Sigma_fit(r[mS],S[mS],mpA[mS],z,'Einasto')
+            S_E_f_E      = Sigma_fit(r[mSe],S_E[mSe],mpA[mSe],z,'Einasto')
             
             if plot:
                 
@@ -128,10 +142,12 @@ def fit_profile(pro,z,plot=True,halo=''):
                 f,ax = plt.subplots()                              
                 ax.fill_between(r[mrho],(rho+mpV*0.5)[mrho],(rho-mpV*0.5)[mrho],color='C0',alpha=0.5)
                 ax.plot(r[mrho],rho[mrho],'C7',lw=2)
-                ax.plot(rho_f.xplot[m],rho_f.yplot[m],'k')
+                ax.plot(rho_f.xplot[m],rho_f.yplot[m],'C2')
+                ax.plot(rho_f_E.xplot[m],rho_f_E.yplot[m],'C3')
                 ax.fill_between(r[mrhoe],(rho_E+mpV*0.5)[mrhoe],(rho_E-mpV*0.5)[mrhoe],color='C1',alpha=0.5)
                 ax.plot(r[mrhoe],rho_E[mrhoe],'C7--',lw=2)
-                ax.plot(rho_E_f.xplot[m1],rho_E_f.yplot[m1],'k--')
+                ax.plot(rho_E_f.xplot[m1],rho_E_f.yplot[m1],'C2--')
+                ax.plot(rho_E_f_E.xplot[m1],rho_E_f_E.yplot[m1],'C3--')
                 ax.axvline(0.7*a_t*pro[1]*1.e-3)
                 
                 f2,ax2 = plt.subplots()                 
@@ -139,8 +155,10 @@ def fit_profile(pro,z,plot=True,halo=''):
                 ax2.plot(r[mS],S[mS],'C7',lw=2)
                 ax2.fill_between(r[mSe],(S_E+mpA*0.5)[mSe],(S_E-mpA*0.5)[mSe],color='C1',alpha=0.5)
                 ax2.plot(r[mSe],S_E[mSe],'C7--',lw=2)
-                ax2.plot(S_f.xplot[m2],S_f.yplot[m2],'k')
-                ax2.plot(S_E_f.xplot[m3],S_E_f.yplot[m3],'k--')
+                ax2.plot(S_f.xplot[m2],S_f.yplot[m2],'C2')
+                ax2.plot(S_f_E.xplot[m2],S_f_E.yplot[m2],'C3')
+                ax2.plot(S_E_f.xplot[m3],S_E_f.yplot[m3],'C2--')
+                ax2.plot(S_E_f_E.xplot[m3],S_E_f_E.yplot[m3],'C3--')
                 ax2.axvline(0.7*a_t*pro[1]*1.e-3)
             
                 ax.set_xscale('log')

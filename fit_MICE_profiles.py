@@ -17,10 +17,6 @@ t1 = time()
 part = '4_4'
 cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 
-# hn = fits.open('../catalogs/halo_props/halo_props2_'+part+'_2_main_plus.fits')[1].data.Halo_number
-# zhalos = fits.open('../catalogs/halo_props/halo_props2_'+part+'_2_main_plus.fits')[1].data.z_v
-# profiles = np.loadtxt('../catalogs/halo_props/halo_props2_'+part+'.csv_profile.bz2',skiprows=1,delimiter=',')
-
 ncores = 32
 main = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2')
 profiles = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
@@ -37,7 +33,7 @@ zhalos = np.array(main.redshift)
 nrings = 25
 
 # index = np.arange(len(profiles))
-index = np.ranom.choice(np.arange(len(profiles)),size=1000)
+index = np.random.choice(np.arange(len(profiles)),size=10000)
 
 avance = np.linspace(0,len(profiles)/ncores,10).astype(int)
 
@@ -197,21 +193,15 @@ for fitted in salida[1:]:
     
     output  = np.vstack((output,fitted))
     
-hn = main['column_halo_id']
+hn = main['column_halo_id'][index]
+# hn = main['column_halo_id']
 
 output = np.column_stack((hn,output))
     
 out_file = '/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass_sample_random.csv.bz2'
 
-head = 'column_halo_id,lgMDelta,Delta, \
-        lgMNFW_rho,cNFW_rho,resNFW_rho,nb_rho, \
-        lgMNFW_rho_E,cNFW_rho_E,resNFW_rho_E,nb_rho_E, \
-        lgMNFW_S,cNFW_S,resNFW_S,nb_S, \
-        lgMNFW_S_E,cNFW_S_E, resNFW_S_E,nb_S_E \
-        lgMEin_rho,cEin_rho,alpha_rho,resEin_rho, \
-        lgMEin_rho_E,cEin_rho_E,alpha_rho_E,resEin_E, \
-        lgMEin_S,cEin_S,alpha_S,resEin_S, \
-        lgMEin_S_E,cEin_S_E,alpha_S_E,resEin_S_E'
+head = 'column_halo_id,lgMDelta,Delta,lgMNFW_rho,cNFW_rho,resNFW_rho,nb_rho,lgMNFW_rho_E,cNFW_rho_E,resNFW_rho_E,nb_rho_E,lgMNFW_S,cNFW_S,resNFW_S,nb_S,lgMNFW_S_E,cNFW_S_E,resNFW_S_E,nb_S_E,lgMEin_rho,cEin_rho,alpha_rho,resEin_rho,lgMEin_rho_E,cEin_rho_E,alpha_rho_E,resEin_E,lgMEin_S,cEin_S,alpha_S,resEin_S,lgMEin_S_E,cEin_S_E,alpha_S_E,resEin_S_E'
+
 
 np.savetxt(out_file,output,fmt=['%10d']+['%5.2f']*34,header=head,comments='',delimiter=',')
 
