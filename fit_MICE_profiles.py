@@ -11,15 +11,27 @@ import pandas as pd
 from fit_models import *
 from time import time
 
-t1 = time()
+t0 = time()
 
 # part = '8_5'
 part = '4_4'
 cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 
 ncores = 32
-main = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2')
-profiles = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
+main0 = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2')
+profiles0 = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
+
+rind = np.random.choice(np.arange(len(profiles0)),size=27000)
+
+main = main0.loc[rind]
+profiles = profiles0[rind]
+
+nrings = 25
+rhopro = profiles[:,2+nrings:2+2*nrings]
+m = np.sum(rhopro>0,axis=1) > 4
+
+
+index = np.arange(len(profiles))[m]
 
 # j = np.argsort(np.array(main0.lgM))[-1000:]
 # main = main0.loc[j]
@@ -30,12 +42,8 @@ mp = 2.927e10
 zhalos = np.array(main.redshift)
 
 
-nrings = 25
 
-# index = np.arange(len(profiles))
-index = np.random.choice(np.arange(len(profiles)),size=10000)
-
-avance = np.linspace(0,len(profiles)/ncores,10).astype(int)
+avance = np.linspace(0,len(index)/ncores,10).astype(int)
 
 def fit_profile(pro,z,plot=False):
     
@@ -182,6 +190,8 @@ slices = slices[(slices <= len(index))]
 # '''
 index_splitted = np.split(index,slices)
 
+t1 = time()
+
 pool = Pool(processes=(ncores))
 salida = pool.map(run_fit_profile, np.array(index_splitted).T)
 pool.terminate()
@@ -193,10 +203,14 @@ for fitted in salida[1:]:
     
     output  = np.vstack((output,fitted))
     
-hn = main['column_halo_id'][index]
-# hn = main['column_halo_id']
+output_all = np.ones((len(profiles),34))*-99.
 
-output = np.column_stack((hn,output))
+output_all[m,:] = output    
+    
+hn = main['column_halo_id']
+
+
+output = np.column_stack((hn,output_all))
     
 out_file = '/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass_sample_random.csv.bz2'
 
@@ -205,5 +219,7 @@ head = 'column_halo_id,lgMDelta,Delta,lgMNFW_rho,cNFW_rho,resNFW_rho,nb_rho,lgMN
 
 np.savetxt(out_file,output,fmt=['%10d']+['%5.2f']*34,header=head,comments='',delimiter=',')
 
-print('TOTAL TIME')
+print('EJECTUTION TIME')
 print((time()-t1)/3600.)
+print('TOTAL TIME')
+print((time()-t0)/3600.)

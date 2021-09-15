@@ -30,7 +30,7 @@ class Sigma_fit:
 
         try:
         
-            out = p.fit(R*1000., Sigma/(1.e3**2), 'Sigma', q_err = err/(1.e3**2), tolerance = 1.e-04,verbose=False)
+            out = p.fit(R*1000., Sigma/(1.e3**2), 'Sigma', q_err = err/(1.e3**2), tolerance = 1.e-02,verbose=False)
             
             
             if model == 'NFW':
@@ -89,7 +89,7 @@ class rho_fit:
 
         try:
         
-            out = p.fit(R*1000., rho/(1.e3**3), 'rho', q_err = err/(1.e3**3), tolerance = 1.e-04,verbose=False)
+            out = p.fit(R*1000., rho/(1.e3**3), 'rho', q_err = err/(1.e3**3), tolerance = 1.e-02,verbose=False)
             
             
             if model == 'NFW':
