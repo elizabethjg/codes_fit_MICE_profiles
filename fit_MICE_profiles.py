@@ -22,12 +22,12 @@ cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 # profiles = np.loadtxt('../catalogs/halo_props/halo_props2_'+part+'.csv_profile.bz2',skiprows=1,delimiter=',')
 
 ncores = 32
-main0 = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2')
-profiles0 = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
+main = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2')
+profiles = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
 
-j = np.argsort(np.array(main0.lgM))[-10000:]
-main = main0.loc[j]
-profiles = profiles0[j]
+# j = np.argsort(np.array(main0.lgM))[-100:]
+# main = main0.loc[j]
+# profiles = profiles0[j]
 
 
 mp = 2.927e10
@@ -38,7 +38,7 @@ nrings = 25
 
 index = np.arange(len(profiles))
 
-avance = np.linspace(0,len(profiles)/ncores,10)
+avance = np.linspace(0,len(profiles)/ncores,10).astype(int)
 
 def fit_profile(pro,z,plot=False):
     
@@ -171,7 +171,8 @@ def run_fit_profile(index):
         
     return output_fits
         
-
+a += '>'
+print(a)
 
 slicer = int(round(len(index)/float(ncores), 0))
 slices = ((np.arange(ncores-1)+1)*slicer).astype(int)
@@ -209,7 +210,7 @@ head = 'column_halo_id,lgMDelta,Delta, \
         lgMEin_S,cEin_S,alpha_S,resEin_S, \
         lgMEin_S_E,cEin_S_E,alpha_S_E,resEin_S_E'
 
-np.savetxt(out_file,output,fmt=['%10d']+['%5.2f']*18,header=head,comments='',delimiter=',')
+np.savetxt(out_file,output,fmt=['%10d']+['%5.2f']*34,header=head,comments='',delimiter=',')
 
 print('TOTAL TIME')
 print((time()-t1)/3600.)

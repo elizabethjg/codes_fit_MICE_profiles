@@ -90,7 +90,7 @@ class rho_fit:
 
         try:
         
-            out = p.fit(R*1000., rho/(1.e3**3), 'Sigma', q_err = err/(1.e3**3),verbose=False)
+            out = p.fit(R*1000., rho/(1.e3**3), 'rho', q_err = err/(1.e3**3),verbose=False)
             
             
             if model == 'NFW':
