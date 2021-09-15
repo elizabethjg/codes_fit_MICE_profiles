@@ -149,7 +149,7 @@ def fit_profile(pro,z,plot=False):
                     
          else:
              
-            return np.zeros(34)
+            return np.ones(34)*-99.
                           
 
 def run_fit_profile(index):
