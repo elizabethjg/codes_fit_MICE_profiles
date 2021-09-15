@@ -114,7 +114,7 @@ def fit_profile(pro,z,plot=True,halo=''):
          
          # error = 1.e12*np.ones(len(r))
          
-         if mrho.sum() > 0. and mS.sum() > 0. and mrhoe.sum() > 0. and mSe.sum() > 0.:
+         if mrho.sum() > 4. and mS.sum() > 4. and mrhoe.sum() > 4. and mSe.sum() > 4.:
 
             # rho_f    = rho_fit(r[mrho],rho[mrho],mpV[mrho],z,cosmo,True)
             # rho_E_f    = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z,cosmo,True)
