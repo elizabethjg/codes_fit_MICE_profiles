@@ -2,7 +2,6 @@ import sys, os
 import numpy as np
 import sys
 from scipy.optimize import curve_fit
-from models_profiles import *
 from colossus.cosmology import cosmology  
 params = {'flat': True, 'H0': 70.0, 'Om0': 0.25, 'Ob0': 0.044, 'sigma8': 0.8, 'ns': 0.95}
 cosmology.addCosmology('MICE', params)

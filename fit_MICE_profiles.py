@@ -25,7 +25,7 @@ ncores = 32
 main = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2')
 profiles = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
 
-# j = np.argsort(np.array(main0.lgM))[-100:]
+# j = np.argsort(np.array(main0.lgM))[-1000:]
 # main = main0.loc[j]
 # profiles = profiles0[j]
 
@@ -36,7 +36,8 @@ zhalos = np.array(main.redshift)
 
 nrings = 25
 
-index = np.arange(len(profiles))
+# index = np.arange(len(profiles))
+index = np.ranom.choice(np.arange(len(profiles)),size=1000)
 
 avance = np.linspace(0,len(profiles)/ncores,10).astype(int)
 
@@ -200,7 +201,7 @@ hn = main['column_halo_id']
 
 output = np.column_stack((hn,output))
     
-out_file = '/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass.csv.bz2'
+out_file = '/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass_sample_random.csv.bz2'
 
 head = 'column_halo_id,lgMDelta,Delta, \
         lgMNFW_rho,cNFW_rho,resNFW_rho,nb_rho, \
