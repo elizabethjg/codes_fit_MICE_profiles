@@ -9,6 +9,9 @@ from multiprocessing import Process
 import astropy.units as u
 import pandas as pd
 from fit_models import *
+from time import time
+
+t1 = time()
 
 # part = '8_5'
 part = '4_4'
@@ -141,17 +144,21 @@ def fit_profile(pro,z,plot=False):
                     np.log10(rho_f.M200),rho_f.c200,rho_f.res,mrho.sum(),
                     np.log10(rho_E_f.M200),rho_E_f.c200,rho_E_f.res,mrhoe.sum(),
                     np.log10(S_f.M200),S_f.c200,S_f.res,mS.sum(),
-                    np.log10(S_E_f.M200),S_E_f.c200,S_E_f.res,mSe.sum()]
+                    np.log10(S_E_f.M200),S_E_f.c200,S_E_f.res,mSe.sum(),
+                    np.log10(rho_f_E.M200),rho_f_E.c200,rho_f_E.alpha,rho_f_E.res,
+                    np.log10(rho_E_f_E.M200),rho_E_f_E.c200,rho_E_f_E.alpha,rho_E_f.res,
+                    np.log10(S_f_E.M200),S_f_E.c200,S_f_E.alpha,S_f_E.res,
+                    np.log10(S_E_f_E.M200),S_E_f_E.c200,S_E_f_E.alpha,S_E_f_E.res]
                     
          else:
              
-            return np.zeros(18)
+            return np.zeros(34)
                           
 
 def run_fit_profile(index):
     
     
-    output_fits = np.zeros((len(index),18))
+    output_fits = np.zeros((len(index),34))
     
     a = '='
     
@@ -190,8 +197,19 @@ hn = main['column_halo_id']
 
 output = np.column_stack((hn,output))
     
-out_file = '/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass_2.csv.bz2'
+out_file = '/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass.csv.bz2'
 
-head = 'column_halo_id,lgMDelta,Delta,lgM200_rho,c200_rho,R3D,nb_rho,lgM200_rho_E,c200_rho_E,R3D_E,nb_rho_E,lgM200_S,c200_S,R2D,nb_S,lgM200_S_E,c200_S_E,R2D_E,nb_S_E'
+head = 'column_halo_id,lgMDelta,Delta, \
+        lgMNFW_rho,cNFW_rho,resNFW_rho,nb_rho, \
+        lgMNFW_rho_E,cNFW_rho_E,resNFW_rho_E,nb_rho_E, \
+        lgMNFW_S,cNFW_S,resNFW_S,nb_S, \
+        lgMNFW_S_E,cNFW_S_E, resNFW_S_E,nb_S_E \
+        lgMEin_rho,cEin_rho,alpha_rho,resEin_rho, \
+        lgMEin_rho_E,cEin_rho_E,alpha_rho_E,resEin_E, \
+        lgMEin_S,cEin_S,alpha_S,resEin_S, \
+        lgMEin_S_E,cEin_S_E,alpha_S_E,resEin_S_E'
 
 np.savetxt(out_file,output,fmt=['%10d']+['%5.2f']*18,header=head,comments='',delimiter=',')
+
+print('TOTAL TIME')
+print((time()-t1)/3600.)
