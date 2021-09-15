@@ -168,11 +168,13 @@ def run_fit_profile(index):
             print(a)
         output_fits[i] = fit_profile(profiles[j],zhalos[j])
         a += '='
+
+    a += '>'
+    print(a)
+
         
     return output_fits
         
-a += '>'
-print(a)
 
 slicer = int(round(len(index)/float(ncores), 0))
 slices = ((np.arange(ncores-1)+1)*slicer).astype(int)
