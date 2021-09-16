@@ -24,7 +24,9 @@ overlap = main.column_halo_id[np.in1d(main.column_halo_id,masses.column_halo_id)
 
 main     = main.loc[overlap]
 profiles = profiles[overlap]
-masses   = masses.loc[np.argsort(masses.column_halo_id)]
+
+u,i = np.unique(masses.column_halo_id,return_index=True)
+masses   = masses.loc[i]
 
 zhalos = main.redshift
 
