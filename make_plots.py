@@ -14,16 +14,16 @@ cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 part = '4_4'
 # part = '8_5_2'
 
-main = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2') 
-profiles = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
+main0 = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2') 
+profiles0 = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
 masses = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass_sample_random.csv.bz2') 
 
 print(len(main))
 
-overlap = main.column_halo_id[np.in1d(main.column_halo_id,masses.column_halo_id)]
+overlap = main.column_halo_id[np.in1d(main0.column_halo_id,masses.column_halo_id)]
 
-main     = main.loc[overlap]
-profiles = profiles[overlap]
+main     = main0.loc[overlap]
+profiles = profiles0[overlap]
 
 u,i = np.unique(masses.column_halo_id,return_index=True)
 masses   = masses.loc[i]
