@@ -21,7 +21,7 @@ ncores = 32
 main0 = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2')
 profiles0 = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
 
-rind = np.random.choice(np.arange(len(profiles0)),size=27000)
+rind = np.random.choice(np.arange(len(profiles0)),size=300000)
 
 main = main0.loc[rind]
 profiles = profiles0[rind]
