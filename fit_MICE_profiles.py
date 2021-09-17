@@ -21,7 +21,8 @@ ncores = 32
 main0 = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2')
 profiles0 = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
 
-rind = np.random.choice(np.arange(len(profiles0)),size=300000)
+# rind = np.random.choice(np.arange(len(profiles0)),size=300000)
+rind = np.random.choice(np.arange(len(profiles0)),size=27000)
 
 main = main0.loc[rind]
 profiles = profiles0[rind]
@@ -221,7 +222,7 @@ out_file = '/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_ma
 head = 'column_halo_id,lgMDelta,Delta,lgMNFW_rho,cNFW_rho,resNFW_rho,nb_rho,lgMNFW_rho_E,cNFW_rho_E,resNFW_rho_E,nb_rho_E,lgMNFW_S,cNFW_S,resNFW_S,nb_S,lgMNFW_S_E,cNFW_S_E,resNFW_S_E,nb_S_E,lgMEin_rho,cEin_rho,alpha_rho,resEin_rho,lgMEin_rho_E,cEin_rho_E,alpha_rho_E,resEin_E,lgMEin_S,cEin_S,alpha_S,resEin_S,lgMEin_S_E,cEin_S_E,alpha_S_E,resEin_S_E'
 
 
-np.savetxt(out_file,output,fmt=['%10d']+['%5.2f']*34,header=head,comments='',delimiter=',')
+# np.savetxt(out_file,output,fmt=['%10d']+['%5.2f']*34,header=head,comments='',delimiter=',')
 
 print('EJECTUTION TIME')
 print((time()-t1)/3600.)
