@@ -269,9 +269,7 @@ plt.savefig(plots_path+'08_q2d_'+part+'_'+lmcut+'.png')
 
 # PROFILES 
 
-lMNFW_rho   = np.array(masses.lgMNFW_rho).astype(float)
-
-mfit = lMNFW_rho > 0
+mfit = masses.lgMDelta > 0
 
 lMNFW_rho   = np.array(masses.lgMNFW_rho).astype(float)[mfit]
 lMNFW_rhoE  = np.array(masses.lgMNFW_rho_E).astype(float)[mfit]
@@ -304,13 +302,23 @@ R2Dnfw  = np.array(masses.resNFW_S.astype(float))[mfit]
 R3Dein  = np.array(masses.resEin_rho.astype(float))[mfit]
 R2Dein  = np.array(masses.resEin_S.astype(float))[mfit]
 
+lgMfof = np.array(main.lgM)[mfit]
+rratio = np.array(rc/main.r_max)[mfit]
+mrelax = rratio < 0.05
 
-msel  = (rc/main.r_max > 0.4)*(main.lgM > 13.5)*(R3Dnfw<0.2)
-j =  index[msel][0]
+plt.figure()
+plt.hist(lgMfof,histtype='step',lw=2)
+plt.xlabel('$M_{FOF}$')
+plt.ylabel('$N$')
+plt.savefig(plots_path+'09_Mfof_fitted_'+part+'_.png')
+
+
+msel  = (rratio > 0.4)*(lgMfof > 13.5)*(R3Dnfw<0.2)
+j =  index[mfit][msel][0]
 fit_profile(profiles[j],zhalos[j],plot=True,halo='unrelaxed')
 
-msel  = (rc/main.r_max < 0.05)*(main.lgM > 13.5)*(R3Dnfw<0.3)
-j =  index[msel][0]
+msel  = (rratio < 0.05)*(lgMfof > 13.5)*(R3Dnfw<0.3)
+j =  index[mfit][msel][0]
 fit_profile(profiles[j],zhalos[j],plot=True,halo='relaxed')
 
 
@@ -322,20 +330,14 @@ plt.hist(R2Dnfw,np.linspace(0,1,50),color='C0',label='NFW',lw=2,histtype='step')
 plt.hist(R2Dein,np.linspace(0,1,50),color='C1',label='Einasto',lw=2,histtype='step')
 plt.xlabel('$Residuals$')
 plt.ylabel('$N$')
-plt.savefig(plots_path+'09_Res_'+part+'_'+lmcut+'.png')
-
-m = np.isfinite(R3Dein)
-make_plot((rc/main.r_max)[mfit][m],np.array(R3Dein).astype(float)[m],(rc/main.r_max)[mfit][m])
-plt.xlabel('$r_c/r_{max}$')
-plt.ylabel('$R_{3D}$')
-plt.ylim([0.,0.5])
-plt.savefig(plots_path+'10_Res_Ein_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'10_Res_'+part+'_'+lmcut+'.png')
 
 
 # MASS COMPARISON
 # with FOF
 
-make_plot(zhalos[mfit],10**(lMNFW_rho - np.array(main.lgM)[mfit]),(rc/main.r_max)[mfit])
+m = np.isfinite(lMNFW_rho)
+make_plot(zhalos[mfit][m],10**(lMNFW_rho[m] - lgMfof[m]),rratio[m])
 plt.xlabel('$z$')
 plt.ylabel('$M_{200}/M_{FOF}$')
 plt.ylim([0,1.2])
@@ -343,148 +345,149 @@ plt.axhline(1)
 plt.savefig(plots_path+'11_M_NFW_comparison_3D_'+part+'_'+lmcut+'.png')
 
 m = np.isfinite(lMEin_rho)
-make_plot(zhalos[mfit][m],10**(lMEin_rho[m] - np.array(main.lgM)[mfit][m]),(rc/main.r_max)[mfit][m])
+make_plot(zhalos[mfit][m],10**(lMEin_rho[m] - lgMfof[m]),rratio[m])
 plt.xlabel('$z$')
 plt.ylabel('$M_{200}/M_{FOF}$')
 plt.ylim([0,1.2])
 plt.axhline(1)
 plt.savefig(plots_path+'12_M_Ein_comparison_3D_'+part+'_'+lmcut+'.png')
 
-
+m = np.isfinite(lMEin_rho)*np.isfinite(lMNFW_rho)
 plt.figure()
-plt.hist(10**(lMNFW_rho[m] - np.array(main.lgM)[mfit][m]),np.linspace(0,2,50),color='C0',label='NFW',histtype='step')
-plt.hist(10**(lMEin_rho[m] - np.array(main.lgM)[mfit][m]),np.linspace(0,2,50),color='C1',label='Einasto',histtype='step')
+plt.hist(10**(lMNFW_rho[m] - lgMfof[m]),np.linspace(0,2,50),color='C0',label='NFW',histtype='step')
+plt.hist(10**(lMEin_rho[m] - lgMfof[m]),np.linspace(0,2,50),color='C1',label='Einasto',histtype='step')
 plt.legend()
 plt.xlabel('$M_{200}/M_{FOF}$')
 plt.ylabel('$N$')
 plt.savefig(plots_path+'13_Mrho_Mfof_'+part+'_'+lmcut+'.png')
 
 plt.figure()
-plt.hist(10**(lMNFW_S[m] - np.array(main.lgM)[mfit][m]),np.linspace(0,2,50),color='C0',label='NFW',lw=2,histtype='step')
-plt.hist(10**(lMEin_S[m] - np.array(main.lgM)[mfit][m]),np.linspace(0,2,50),color='C1',label='Einasto',lw=2,histtype='step')
+plt.hist(10**(lMNFW_S[m] - lgMfof[m]),np.linspace(0,2,50),color='C0',label='NFW',lw=2,histtype='step')
+plt.hist(10**(lMEin_S[m] - lgMfof[m]),np.linspace(0,2,50),color='C1',label='Einasto',lw=2,histtype='step')
 plt.legend()
-plt.xlabel('$M_{200}/M_{FOF}$')
+plt.xlabel('$M^{2D}_{200}/M_{FOF}$')
 plt.ylabel('$N$')
 plt.savefig(plots_path+'14_MS_Mfof_'+part+'_'+lmcut+'.png')
 
+m = np.isfinite(lMEin_rho)*np.isfinite(lMNFW_rho)*mrelax
 plt.figure()
-plt.hist(10**(lMNFW_rho[m*mrelax[mfit]] - np.array(main.lgM)[mfit][m*mrelax[mfit]]),np.linspace(0,2,50),color='C0',label='NFW',histtype='step')
-plt.hist(10**(lMEin_rho[m*mrelax[mfit]] - np.array(main.lgM)[mfit][m*mrelax[mfit]]),np.linspace(0,2,50),color='C1',label='Einasto',histtype='step')
+plt.hist(10**(lMNFW_rho[m] - lgMfof[m]),np.linspace(0,2,50),color='C0',label='NFW',histtype='step')
+plt.hist(10**(lMEin_rho[m] - lgMfof[m]),np.linspace(0,2,50),color='C1',label='Einasto',histtype='step')
 plt.legend()
 plt.xlabel('$M_{200}/M_{FOF}$')
 plt.ylabel('$N$')
-plt.savefig(plots_path+'15_Mrho_Mfof_relax_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'13_Mrho_Mfof_relaxed_'+part+'_'+lmcut+'.png')
 
 plt.figure()
-plt.hist(10**(lMNFW_S[m*mrelax[mfit]] - np.array(main.lgM)[mfit][m*mrelax[mfit]]),np.linspace(0,2,50),color='C0',label='NFW',lw=2,histtype='step')
-plt.hist(10**(lMEin_S[m*mrelax[mfit]] - np.array(main.lgM)[mfit][m*mrelax[mfit]]),np.linspace(0,2,50),color='C1',label='Einasto',lw=2,histtype='step')
+plt.hist(10**(lMNFW_S[m] - lgMfof[m]),np.linspace(0,2,50),color='C0',label='NFW',lw=2,histtype='step')
+plt.hist(10**(lMEin_S[m] - lgMfof[m]),np.linspace(0,2,50),color='C1',label='Einasto',lw=2,histtype='step')
 plt.legend()
-plt.xlabel('$M_{200}/M_{FOF}$')
+plt.xlabel('$M^{2D}_{200}/M_{FOF}$')
 plt.ylabel('$N$')
-plt.savefig(plots_path+'16_MS_Mfof_relax_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'14_MS_Mfof_relaxed_'+part+'_'+lmcut+'.png')
 
 
 
-md = (masses.Delta > 180)*(masses.Delta < 220)
-
+md = (masses.Delta[mfit] > 190)*(masses.Delta[mfit] < 200)
+m = np.isfinite(lMEin_rho)*np.isfinite(lMNFW_rho)*md
 plt.figure()
-plt.hist(10**(lMNFW_rho[m*md[mfit]] - np.array(masses.lgMDelta)[mfit][m*md[mfit]]),np.linspace(0,2,50),color='C0',label='NFW',lw=2,histtype='step')
-plt.hist(10**(lMEin_rho[m*md[mfit]] - np.array(masses.lgMDelta)[mfit][m*md[mfit]]),np.linspace(0,2,50),color='C1',label='Einasto',lw=2,histtype='step')
+plt.hist(10**(lMNFW_rho[m] - np.array(masses.lgMDelta)[mfit][m]),np.linspace(0,2,50),color='C0',label='NFW',lw=2,histtype='step')
+plt.hist(10**(lMEin_rho[m] - np.array(masses.lgMDelta)[mfit][m]),np.linspace(0,2,50),color='C1',label='Einasto',lw=2,histtype='step')
 plt.legend()
 plt.xlabel('$M_{200}/M_{\Delta}$')
 plt.ylabel('$N$')
-plt.savefig(plots_path+'16_Mrho_MDelta_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'15_Mrho_MDelta_'+part+'_'+lmcut+'.png')
 
 
 # 3D vs 2D
 # M_RATIO
 
-m = np.isfinite(lMNFW_S)
+m = np.isfinite(lMNFW_S)*np.isfinite(lMNFW_rho)*np.isfinite(R2Dnfw)
 make_plot(R2Dnfw[m],np.array(10**(lMNFW_rho[m] - lMNFW_S[m])),(rc/np.array(main.r_max))[mfit][m])
 plt.ylabel('$M_{200}/M^{2D}_{200}$')
 plt.xlabel('$R2D$')
 plt.ylim([0,3])
 plt.axhline(1)
-plt.savefig(plots_path+'17_MNFW_R2D_comparison_project_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'16_MNFW_R2D_comparison_project_'+part+'_'+lmcut+'.png')
 
 
-m = np.isfinite(lMEin_S)*np.isfinite(lMEin_rho)*(R2Dein < 1.)
-make_plot(R2Dein[m],np.array(10**(lMEin_rho[m] - lMEin_S[m])),(rc/np.array(main.r_max))[mfit][m])
+m = np.isfinite(lMEin_S)*np.isfinite(lMEin_rho)*np.isfinite(R2Dein)*(R2Dein < 1.)
+make_plot(R2Dein[m],np.array(10**(lMEin_rho[m] - lMEin_S[m])),rratio[m])
 plt.ylabel('$M_{200}/M^{2D}_{200}$')
 plt.xlabel('$R2D$')
 plt.ylim([0,3])
 plt.axhline(1)
-plt.savefig(plots_path+'18_MEin_R2D_comparison_project_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'17_MEin_R2D_comparison_project_'+part+'_'+lmcut+'.png')
 
 
 # C RATIO
 
 m = np.isfinite(cNFW_rho/cNFW_S)*(R2Dnfw > 0)
-make_plot(R2Dnfw[m],(cNFW_rho/cNFW_S)[m],(rc/np.array(main.r_max))[mfit][m])
+make_plot(R2Dnfw[m],(cNFW_rho/cNFW_S)[m],rratio[m])
 plt.ylabel('$c_{200}/c^{2D}_{200}$')
 plt.xlabel('$R2D$')
 plt.ylim([0,1.5])
 plt.axhline(1)
-plt.savefig(plots_path+'19_cNFW_R2D_comparison_project_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'18_cNFW_R2D_comparison_project_'+part+'_'+lmcut+'.png')
 
 
 m = np.isfinite(cEin_rho/cEin_S)*(R2Dein < 0.8)*(R2Dein > 0)
-make_plot(R2Dein[m],(cEin_rho/cEin_S)[m],(rc/np.array(main.r_max))[mfit][m])
+make_plot(R2Dein[m],(cEin_rho/cEin_S)[m],rratio[m])
 plt.ylabel('$c_{200}/c^{2D}_{200}$')
 plt.xlabel('$R2D$')
 plt.ylim([0,1.5])
 plt.axhline(1)
-plt.savefig(plots_path+'20_cEin_R2D_comparison_project_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'19_cEin_R2D_comparison_project_'+part+'_'+lmcut+'.png')
 
 
 # ALPHA RATIO
 alpha_ratio = np.array(masses.alpha_rho[mfit]).astype(float)/np.array(masses.alpha_S[mfit]).astype(float)
-m = np.isfinite(alpha_ratio)*(R2Dein < 0.6)*(R2Dein > 0)
-make_plot(R2Dein[m],alpha_ratio[m],(rc/np.array(main.r_max))[mfit][m])
-plt.ylabel('$c_{200}/c^{2D}_{200}$')
+m = np.isfinite(alpha_ratio)*(R2Dein < 0.8)*(R2Dein > 0)
+make_plot(R2Dein[m],alpha_ratio[m],rratio[m])
+plt.ylabel(r'$\alpha/ \alpha^{2D}$')
 plt.xlabel('$R2D$')
-plt.ylim([0,1.5])
+plt.ylim([0,2.5])
 plt.axhline(1)
-plt.savefig(plots_path+'21_alpha_R2D_comparison_project_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'20_alpha_R2D_comparison_project_'+part+'_'+lmcut+'.png')
 
 
 
 # SPHERICAL VS ELLIPTICAL
 # MASSES
 m = np.isfinite(lMNFW_rho)*np.isfinite(lMNFW_rhoE)
-make_plot(s[mfit][m],np.array(10**(lMNFW_rho[m] - lMNFW_rhoE[m])),(rc/np.array(main.r_max))[mfit][m])
+make_plot(np.array(s)[mfit][m],np.array(10**(lMNFW_rho[m] - lMNFW_rhoE[m])),rratio[m])
 plt.xlabel('$S=c/a$')
 plt.ylabel('$M_{200}/M_{200E}$')
 plt.axhline(1)
 plt.ylim([0.,1.5])
-plt.savefig(plots_path+'22_M_NFW_comparison_3D_elliptical_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'21_M_NFW_comparison_3D_elliptical_'+part+'_'+lmcut+'.png')
 
-m = np.isfinite(lMEin_rho)*np.isfinite(lMEin_rhoE)*(s[mfit]>0.2)
-make_plot(s[mfit][m],np.array(10**(lMEin_rho[m] - lMEin_rhoE[m])),(rc/np.array(main.r_max))[mfit][m])
+m = np.isfinite(lMEin_rho)*np.isfinite(lMEin_rhoE)
+make_plot(np.array(s)[mfit][m],np.array(10**(lMEin_rho[m] - lMEin_rhoE[m])),rratio[m])
 plt.xlabel('$S=c/a$')
 plt.ylabel('$M_{200}/M_{200E}$')
 plt.axhline(1)
 plt.ylim([0.,1.5])
-plt.savefig(plots_path+'23_M_Ein_comparison_3D_elliptical_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'21_M_Ein_comparison_3D_elliptical_'+part+'_'+lmcut+'.png')
 
 
 #CONCENTRATIONS
 
-m = np.isfinite(cNFW_rho)*np.isfinite(cNFW_rhoE)*(s[mfit]>0.2)
-make_plot(s[mfit][m],(cNFW_rho/cNFW_rhoE)[m],(rc/np.array(main.r_max))[mfit][m])
+m = np.isfinite(cNFW_rho/cNFW_rhoE)
+make_plot(np.array(s)[mfit][m],(cNFW_rho/cNFW_rhoE)[m],rratio[m])
 plt.xlabel('$S=c/a$')
 plt.ylabel('$M_{200}/M_{200E}$')
 plt.axhline(1)
-plt.ylim([0.,1.5])
-plt.savefig(plots_path+'24_c_NFW_comparison_3D_elliptical_'+part+'_'+lmcut+'.png')
+plt.ylim([0.,2.5])
+plt.savefig(plots_path+'22_c_NFW_comparison_3D_elliptical_'+part+'_'+lmcut+'.png')
 
-m = np.isfinite(cEin_rho/cEin_rhoE)*(s[mfit]>0.2)
-make_plot(s[mfit][m],(cEin_rho[m]/cEin_rhoE[m]),(rc/np.array(main.r_max))[mfit][m])
+m = np.isfinite(cEin_rho/cEin_rhoE)
+make_plot(np.array(s)[mfit][m],(cEin_rho[m]/cEin_rhoE[m]),(rc/np.array(main.r_max))[mfit][m])
 plt.xlabel('$S=c/a$')
 plt.ylabel('$M_{200}/M_{200E}$')
 plt.axhline(1)
-plt.ylim([0.,1.5])
-plt.savefig(plots_path+'25_c_Ein_comparison_3D_elliptical_'+part+'_'+lmcut+'.png')
+plt.ylim([0.,2.5])
+plt.savefig(plots_path+'22_c_Ein_comparison_3D_elliptical_'+part+'_'+lmcut+'.png')
 
 
 
