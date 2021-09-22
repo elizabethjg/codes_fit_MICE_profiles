@@ -17,7 +17,7 @@ t0 = time()
 part = '3_3'
 cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 
-ncores = 32
+ncores = 56
 main0 = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2')
 profiles0 = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
 
