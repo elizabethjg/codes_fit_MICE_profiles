@@ -14,10 +14,10 @@ from time import time
 t0 = time()
 
 # part = '8_5'
-part = '2_2'
+part = '3_3'
 cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 
-ncores = 56
+ncores = 32
 main0 = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2')
 profiles0 = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
 
@@ -83,14 +83,8 @@ def fit_profile(pro,z,plot=False):
          mSe = (S_E > 0.)#*(r < 0.3)
          
          
-         # error = 1.e12*np.ones(len(r))
-         
          if mrho.sum() > 4. and mS.sum() > 4. and mrhoe.sum() > 4. and mSe.sum() > 4.:
 
-            # rho_f    = rho_fit(r[mrho],rho[mrho],mpV[mrho],z,cosmo,True)
-            # rho_E_f    = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z,cosmo,True)
-            # S_f      = Sigma_fit(r[mS],S[mS],mpA[mS],z,cosmo,True)
-            # S_E_f      = Sigma_fit(r[mSe],S_E[mSe],mpA[mSe],z,cosmo,True)
 
             rho_f    = rho_fit(r[mrho],rho[mrho],mpV[mrho],z)
             rho_E_f    = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z)

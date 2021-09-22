@@ -16,7 +16,7 @@ part = '4_4'
 
 main0 = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2') 
 profiles0 = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
-masses = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass_sample_random.csv.bz2') 
+masses = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass_sample_randsample.csv.bz2') 
 
 
 overlap = main0.column_halo_id[np.in1d(main0.column_halo_id,masses.column_halo_id)]
