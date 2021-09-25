@@ -1,11 +1,17 @@
 import numpy as np
 import pandas as pd
 sys.path.append('/mnt/projects/lensing/lens_codes_v3.7')
+sys.path.append('/mnt/projects/lensing/HALO_SHAPE/MICEv2.0/codes_fit_MICE_profiles')
 import argparse
 from astropy.cosmology import LambdaCDM 
 from fit_profiles_curvefit import *
 from models_profiles import *
+from fit_models import *
 cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
+
+# list_n = np.loadtxt('/mnt/projects/lensing/HALO_SHAPE/MICEv1.0/catalogs/ind_halos_lM/cord.list',dtype=str)
+# main = pd.read_csv('/mnt/projects/lensing/HALO_SHAPE/MICEv1.0/catalogs/halo_props2_8_5_pru_lM_main.csv.bz2')
+# profiles = np.loadtxt('/mnt/projects/lensing/HALO_SHAPE/MICEv1.0/catalogs/halo_props2_8_5_pru_lM_pro.csv.bz2',skiprows=1,delimiter=',')
 
 list_n = np.loadtxt('/mnt/projects/lensing/HALO_SHAPE/MICEv1.0/catalogs/ind_halos/cord.list',dtype=str)
 main = pd.read_csv('/mnt/projects/lensing/HALO_SHAPE/MICEv1.0/catalogs/halo_props2_8_5_pru_main.csv.bz2')
@@ -22,11 +28,8 @@ rc = np.array(np.sqrt((main.xc - main.xc_rc)**2 + (main.yc - main.yc_rc)**2 + (m
 
 relax = rc/np.array(main.r_max)
 
-ratioc = np.array([])
-ratioM = np.array([])
+nrings = 25
 
-R3D = np.zeros(nrings)
-R2D = np.zeros(nrings)
 
 for halo in range(len(list_n)):
 
@@ -49,15 +52,15 @@ for halo in range(len(list_n)):
     
     
     nhalos = 0
-    # for j in range(len(list_n)):
-    for j in [halo]:
+    for j in range(len(list_n)):
+    # for j in [halo]:
         
-        # if relax[j] < 0.1:
+        if relax[j] < 0.07:
         
+            # part0 = np.loadtxt('/mnt/projects/lensing/HALO_SHAPE/MICEv1.0/catalogs/ind_halos_lM/coords'+str(ides[j])).T  
             part0 = np.loadtxt('/mnt/projects/lensing/HALO_SHAPE/MICEv1.0/catalogs/ind_halos/coords'+str(ides[j])).T  
         
-        
-            nrings = 10
+    
         
             x,y,z = part0[0],part0[1],part0[2]
             xp,yp = part0[6],part0[7]
@@ -85,11 +88,11 @@ for halo in range(len(list_n)):
             Ze = np.append(Ze,a_t*ze)
             
             nhalos +=1
-        # else:
-            # continue
+        else:
+            continue
         
         
-    nrings = 25
+
     rin = 10.
     mp = 2.927e10
     step = (1000.-rin)/float(nrings)
@@ -110,7 +113,9 @@ for halo in range(len(list_n)):
     
     ring = 0
     
-    while ring < (nrings-1) and (rin+step < 0.7*np.mean(RMAX)):
+    rmax = np.max([0.7*np.mean(RMAX),220.])
+    
+    while ring < (nrings-1) and (rin+step < rmax):
         
         abin_in = rin/(q*s)**(1./3.)
         bbin_in = abin_in*q
@@ -154,39 +159,9 @@ for halo in range(len(list_n)):
     
     mr = rhop > 0
     
-    rho_f    = rho_fit(rp[mr],rhop[mr]/nhalos,mpV[mr],z,cosmo,True) 
-    S_f      = Sigma_fit(rp[mr],Sp[mr]/nhalos,mpA[mr],z,cosmo,True)
-
-
-    # rho_f    = rho_fit(rp[mr],rhop[mr]/nhalos,np.ones(mr.sum()),z,cosmo,True) 
-    # S_f      = Sigma_fit(rp[mr],Sp[mr]/nhalos,np.ones(mr.sum()),z,cosmo,True)
+    rhof    = rho_fit(rp[mr],rhop[mr]/nhalos,mpV[mr]/nhalos,z)
+    Sf      = Sigma_fit(rp[mr],Sp[mr]/nhalos,mpA[mr]/nhalos,z)
+    rhof_E    = rho_fit(rp[mr],rhop[mr]/nhalos,mpV[mr]/nhalos,z,'Einasto',rhof.M200,rhof.c200)
+    Sf_E      = Sigma_fit(rp[mr],Sp[mr]/nhalos,mpA[mr]/nhalos,z,'Einasto',rhof.M200,rhof.c200)
 
     
-    Sf_rho  = Sigma_NFW(rp[mr],z,rho_f.M200,rho_f.c200,cosmo=cosmo)
-    Sf = Sigma_NFW(rp[mr],z,S_f.M200,S_f.c200,cosmo=cosmo)
-    rhof = rho_NFW(rp[mr],z,rho_f.M200,rho_f.c200,cosmo=cosmo)
-
-
-    
-    ratioc = np.append(ratioc,rho_f.c200/S_f.c200)
-    ratioM = np.append(ratioM,rho_f.M200/S_f.M200)
-    R3D    = np.append(R3D,rho_f.res)
-    R2D    = np.append(R2D,S_f.res)
-
-
-    
-
-plt.figure()
-plt.plot(rp[mr],rhop[mr]/nhalos,'k')
-plt.plot(rp[mr],rhof)
-
-
-plt.figure()
-plt.plot(rp[mr],Sp[mr]/nhalos,'k')
-plt.plot(rp[mr],Sp2[mr]/nhalos,'C7')
-plt.plot(rp[mr],Sf)
-plt.plot(rp[mr],Sf2)
-
-
-# plt.hist(ratio1,np.linspace(0.2,2,15),histtype='step')
-# plt.hist(ratio2,np.linspace(0.2,2,15),histtype='step')

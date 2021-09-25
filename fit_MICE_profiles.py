@@ -1,7 +1,6 @@
 import sys
 sys.path.append('/mnt/projects/lensing/lens_codes_v3.7')
 import numpy as np
-from astropy.io import fits
 from astropy.cosmology import LambdaCDM
 from fit_profiles_curvefit import *
 from multiprocessing import Pool
@@ -14,20 +13,21 @@ from time import time
 t0 = time()
 
 # part = '8_5'
-part = '3_3'
+part = '2_2'
 cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 
 ncores = 56
 main0 = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2')
 profiles0 = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
 
-rind = np.random.choice(np.arange(len(profiles0)),size=300000)
+rind = np.random.choice(np.arange(len(profiles0)),size=500000)
 # rind = np.random.choice(np.arange(len(profiles0)),size=27000)
 
 main = main0.loc[rind]
 profiles = profiles0[rind]
 
 nrings = 25
+r     = profiles[:,2:2+nrings]/1.e3
 rho   = profiles[:,2+nrings:2+2*nrings]
 rho_E = profiles[:,2+2*nrings:2+3*nrings]
 S     = profiles[:,2+3*nrings:2+4*nrings]
@@ -77,10 +77,10 @@ def fit_profile(pro,z,plot=False):
          MDelta = Msum[j200]
          Delta  = ((Msum/Vsum)/roc_mpc)[j200]
          
-         mrho = (rho > 0.)#*(r < 0.3)
-         mS = (S > 0.)#*(r < 0.3)
-         mrhoe = (rho_E > 0.)#*(r < 0.3)
-         mSe = (S_E > 0.)#*(r < 0.3)
+         mrho = (rho > 0.)*(r > 0.15)
+         mS = (S > 0.)*(r > 0.15)
+         mrhoe = (rho_E > 0.)*(r > 0.15)
+         mSe = (S_E > 0.)*(r > 0.15)
          
          
          if mrho.sum() > 4. and mS.sum() > 4. and mrhoe.sum() > 4. and mSe.sum() > 4.:
@@ -211,7 +211,7 @@ hn = main['column_halo_id']
 
 output = np.column_stack((hn,output_all))
     
-out_file = '/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass_randsample.csv.bz2'
+out_file = '/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass_randsample_rlim.csv.bz2'
 
 head = 'column_halo_id,lgMDelta,Delta,lgMNFW_rho,cNFW_rho,resNFW_rho,nb_rho,lgMNFW_rho_E,cNFW_rho_E,resNFW_rho_E,nb_rho_E,lgMNFW_S,cNFW_S,resNFW_S,nb_S,lgMNFW_S_E,cNFW_S_E,resNFW_S_E,nb_S_E,lgMEin_rho,cEin_rho,alpha_rho,resEin_rho,lgMEin_rho_E,cEin_rho_E,alpha_rho_E,resEin_E,lgMEin_S,cEin_S,alpha_S,resEin_S,lgMEin_S_E,cEin_S_E,alpha_S_E,resEin_S_E'
 
