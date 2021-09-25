@@ -16,6 +16,11 @@ class Sigma_fit:
 
     def __init__(self,R,Sigma,err,z,model='NFW',Min=1.e13,cin=3.):
 
+        Min = np.max([1.e11,Min])
+        Min = np.min([1.e15,Min])
+        cin = np.max([1,cin])
+        cin = np.min([10,cin])
+
 
         xplot   = np.arange(0.001,R.max()+1.,0.001)
         
@@ -74,6 +79,11 @@ class rho_fit:
 	
 
     def __init__(self,R,rho,err,z,model='NFW',Min=1.e13,cin=3.):
+
+        Min = np.max([1.e11,Min])
+        Min = np.min([1.e15,Min])
+        cin = np.max([1,cin])
+        cin = np.min([10,cin])
 
 
         xplot   = np.arange(0.001,R.max()+1.,0.001)
