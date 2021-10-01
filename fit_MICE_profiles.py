@@ -14,7 +14,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-file', action='store', dest='file',default='2_2')
-
+args = parser.parse_args()
 
 t0 = time()
 
