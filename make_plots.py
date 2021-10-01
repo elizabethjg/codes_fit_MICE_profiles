@@ -16,6 +16,7 @@ part = '2_2'
 
 main0 = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2') 
 profiles0 = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
+# masses = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass_hM.csv.bz2')
 masses = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass_randsample.csv.bz2')
 
 
@@ -41,6 +42,14 @@ zhalos = np.array(main.redshift)
 
 
 nrings = 25
+
+def c200_duffy(M,z,model = 'NFW'):
+    #calculo de c usando la relacion de Duffy et al 2008
+    if model == 'NFW':
+        return 5.71*((M/2.e12)**-0.084)*((1.+z)**-0.47)
+    elif model == 'Einasto':
+        return 6.4*((M/2.e12)**-0.108)*((1.+z)**-0.62)
+
 
 def q_75(y):
     return np.quantile(y, 0.75)
@@ -176,7 +185,7 @@ def fit_profile(pro,z,plot=True,halo=''):
                 f.savefig(plots_path+'profile_rho_'+part+'_'+halo+'.png')
                 f2.savefig(plots_path+'profile_S_'+part+'_'+halo+'.png')
          
-         
+   
          
 s    = main.c3D/main.a3D
 q    = main.b3D/main.a3D
@@ -195,8 +204,8 @@ u2 = np.array(main.Epot)
 
 mrelax2 = ((2.*k2)/abs(u2)) < 1.35
 
-mcut = np.array(main.lgM > 10.0)#*mrelax
-lmcut = 'M12'
+mcut = np.array(main.lgM > 13.5)#*mrelax
+lmcut = 'hM'
 
 
 # RELAXATION 
@@ -302,6 +311,11 @@ R2Dnfw  = np.array(masses.resNFW_S.astype(float))[mfit]
 R3Dein  = np.array(masses.resEin_rho.astype(float))[mfit]
 R2Dein  = np.array(masses.resEin_S.astype(float))[mfit]
 
+R3Dnfw_E  = np.array(masses.resNFW_rho_E.astype(float))[mfit]
+R2Dnfw_E  = np.array(masses.resNFW_S_E.astype(float))[mfit]
+R3Dein_E  = np.array(masses.resEin_E.astype(float))[mfit]
+R2Dein_E  = np.array(masses.resEin_S_E.astype(float))[mfit]
+
 lgMfof = np.array(main.lgM)[mfit]
 rratio = np.array(rc/main.r_max)[mfit]
 mrelax = rratio < 0.05
@@ -310,7 +324,14 @@ plt.figure()
 plt.hist(lgMfof,histtype='step',lw=2)
 plt.xlabel('$M_{FOF}$')
 plt.ylabel('$N$')
-plt.savefig(plots_path+'09_Mfof_fitted_'+part+'_.png')
+plt.savefig(plots_path+'09_Mfof_fitted_'+part+'_'+lmcut+'.png')
+
+plt.figure()
+plt.hist(zhalos[mfit],histtype='step',lw=2)
+plt.xlabel('$z$')
+plt.ylabel('$N$')
+plt.savefig(plots_path+'09_zhalos_fitted_'+part+'_'+lmcut+'.png')
+
 
 
 msel  = (rratio > 0.4)*(lgMfof > 13.0)*(R3Dnfw<0.2)
@@ -420,19 +441,19 @@ plt.axhline(1)
 plt.savefig(plots_path+'17_MEin_R2D_comparison_project_'+part+'_'+lmcut+'.png')
 
 m = np.isfinite(lMNFW_S)*np.isfinite(lMNFW_rho)
-make_plot(np.array((1.-q)/(1.-s))[mfit][m],np.array(10**(lMNFW_rho[m] - lMNFW_S[m])),(rc/np.array(main.r_max))[mfit][m])
+make_plot(np.array(s)[mfit][m],np.array(10**(lMNFW_rho[m] - lMNFW_S[m])),(rc/np.array(main.r_max))[mfit][m])
 plt.ylabel('$M_{200}/M^{2D}_{200}$')
-plt.xlabel('$T$')
+plt.xlabel('$s=c/a$')
 plt.ylim([0,3])
 plt.xlim([0,1])
 plt.axhline(1)
-plt.savefig(plots_path+'18_MNFW_T_comparison_project_'+part+'_'+lmcut+'.png')
+plt.savefig(plots_path+'18_MNFW_S_comparison_project_'+part+'_'+lmcut+'.png')
 
 
 m = np.isfinite(lMEin_S)*np.isfinite(lMEin_rho)*np.isfinite(R2Dein)*(R2Dein < 1.)
 make_plot(np.array(s)[mfit][m],np.array(10**(lMEin_rho[m] - lMEin_S[m])),rratio[m])
 plt.ylabel('$M_{200}/M^{2D}_{200}$')
-plt.xlabel('$T$')
+plt.xlabel('$s=c/a$')
 plt.ylim([0,3])
 plt.axhline(1)
 plt.savefig(plots_path+'19_MEin_S_comparison_project_'+part+'_'+lmcut+'.png')
@@ -539,45 +560,71 @@ plt.savefig(plots_path+'22_alpha_Ein_comparison_3D_elliptical_'+part+'_'+lmcut+'
 # Mass/concentration
 # M_RATIO
 
-
-m = np.isfinite(cNFW_rho)*np.isfinite(lMNFW_rho)*(lMNFW_rho<15.)*(lMNFW_rho>12.)
+m = np.isfinite(cNFW_rho)*np.isfinite(lMNFW_rho)*(lMNFW_rho<15.)*(lMNFW_rho>11.)*(zhalos[mfit] < 0.3)
 make_plot(np.array(lMNFW_rho)[m],cNFW_rho[m],(rc/np.array(main.r_max))[mfit][m])
-plt.plot(np.arange(12,15,0.1),c200_duffy(10**np.arange(12.,15,0.1),np.median(zhalos[mfit])))
-plt.ylabel('$\log M_{200}$')
-plt.xlabel('$c_{200}$')
-plt.ylim([0,10])
+plt.plot(np.arange(13,15,0.1),c200_duffy(10**np.arange(13.,15,0.1),np.median(zhalos[mfit][m])))
+plt.xlabel('$\log M_{200}$')
+plt.ylabel('$c_{200}$')
+plt.ylim([0,6])
 plt.savefig(plots_path+'23_MNFW_c200_comparison_project_'+part+'_'+lmcut+'.png')
 
-m = np.isfinite(cEin_rho)*np.isfinite(lMEin_rho)*(lMEin_rho<15.)*(lMEin_rho>13.5)*(R3Dein < 0.1)*(zhalos[mfit] < 0.3)
-make_plot(np.array(lMEin_rho)[m],cNFW_rho[m],(rc/np.array(main.r_max))[mfit][m],nbins=10)
-plt.plot(np.arange(12,15,0.1),c200_duffy(10**np.arange(12.,15,0.1),np.median(zhalos[mfit])))
-plt.xlabel('$\log M_{200}$')
+m = np.isfinite(cNFW_rho)*np.isfinite(lMNFW_rho)*(lMNFW_rho<14.)*(lMNFW_rho>13.)
+make_plot(np.array(zhalos)[mfit][m],cNFW_rho[m],(rc/np.array(main.r_max))[mfit][m])
+plt.plot(np.arange(0.2,1.5,0.1),c200_duffy(np.median(10**lMNFW_rho[m]),np.arange(0.2,1.5,0.1)))
+plt.xlabel('$z$')
 plt.ylabel('$c_{200}$')
-plt.ylim([0,5])
+plt.ylim([0,6])
+plt.savefig(plots_path+'23_z_cNFW_comparison_project_'+part+'_'+lmcut+'.png')
+
+m = np.isfinite(cEin_rho)*np.isfinite(lMEin_rho)*(lMEin_rho<15.)*(lMEin_rho>11.)*(zhalos[mfit] < 0.3)*(cEin_rho > 0)#*(R3Dein < 0.1)
+make_plot(np.array(lMEin_rho)[m],np.log10(cEin_rho)[m],(rc/np.array(main.r_max))[mfit][m])
+plt.plot(np.arange(11,15,0.1),np.log10(c200_duffy(10**np.arange(11.,15,0.1),np.median(zhalos[mfit][m]),'Einasto')))
+plt.plot(np.arange(11,15,0.1),np.log10(c200_duffy(10**np.arange(11.,15,0.1),2.,'Einasto')))
+plt.xlabel('$\log M_{200}$')
+plt.ylabel('$\log c_{200}$')
+plt.ylim([0.,1])
 plt.savefig(plots_path+'24_MEin_c200_comparison_project_'+part+'_'+lmcut+'.png')
 
-m = np.isfinite(cEin_rho)*np.isfinite(lMEin_rho)*(lMEin_rho<14.)*(lMEin_rho>13.)*(R3Dein < 0.1)
-make_plot(np.array(zhalos[mfit])[m],cNFW_rho[m],(rc/np.array(main.r_max))[mfit][m])
-# plt.plot(np.arange(12,15,0.1),c200_duffy(10**np.arange(12.,15,0.1),np.median(zhalos[mfit])))
-plt.xlabel('$\log M_{200}$')
+m = np.isfinite(cEin_rho)*np.isfinite(lMEin_rho)*(lMEin_rho<14.)*(lMEin_rho>13.)
+make_plot(np.array(zhalos)[mfit][m],cEin_rho[m],(rc/np.array(main.r_max))[mfit][m])
+plt.plot(np.arange(0.2,1.5,0.1),c200_duffy(np.median(10**lMEin_rho[m]),np.arange(0.2,1.5,0.1),'Einasto'))
+plt.xlabel('$z$')
 plt.ylabel('$c_{200}$')
-plt.ylim([0,5])
+plt.ylim([0,6])
 plt.savefig(plots_path+'24_z_cEin_comparison_project_'+part+'_'+lmcut+'.png')
 
+m = np.isfinite(alpha_rhoE)*np.isfinite(lMEin_rhoE)*(lMEin_rhoE<15.)*(lMEin_rhoE>11.)*(zhalos[mfit] < 0.3)#*(R3Dein < 0.1)
+make_plot(np.array(lMEin_rhoE)[m],alpha_rhoE[m],(rc/np.array(main.r_max))[mfit][m])
+plt.xlabel('$\log M_{200}$')
+plt.ylabel(r'$\alpha$')
+plt.ylim([0,2])
 
-14.0,3.2,53
-12.5,2.5,14233
-m = np.isfinite(cEin_rho)*np.isfinite(cNFW_rho)*(cEin_rho < 6)*(cNFW_rho < 6)*(cEin_rho > 0)*(cNFW_rho > 0)
-make_plot(cEin_rho[m],cNFW_rho[m],(rc/np.array(main.r_max))[mfit][m])
-plt.ylabel('$c^{NFW}_{200}$')
-plt.xlabel('$c^{Ein}_{200}$')
-plt.plot([0,6],[0,6],'C1--')
-plt.savefig(plots_path+'25_cEinNFW_comparison_project_'+part+'_'+lmcut+'.png')
+
+# COMPARISON NFW vs Einasto
+
+m = np.isfinite(cEin_rho/cNFW_rho)*np.isfinite(R3Dnfw)*(R3Dnfw > 0)
+make_plot(R3Dnfw[m],(cEin_rho[m]/cNFW_rho[m]),(rc/np.array(main.r_max))[mfit][m])
+plt.ylabel('$c^{Ein}_{200}/c^{NFW}_{200}$')
+plt.xlabel('$R^{NFW}_{3D}$')
+plt.axhline(1)
+plt.ylim([0.5,2.])
+plt.savefig(plots_path+'25_cEinNFW_comparison_'+part+'_'+lmcut+'.png')
 
 m = np.isfinite(lMEin_rho)*np.isfinite(lMNFW_rho)*(lMEin_rho>10)*(lMNFW_rho>10)
-make_plot(lMEin_rho[m],lMNFW_rho[m],(rc/np.array(main.r_max))[mfit][m])
-plt.ylabel('$M^{NFW}_{200}$')
-plt.xlabel('$M^{Ein}_{200}$')
-plt.plot([12,15],[12,15],'C1--')
-plt.savefig(plots_path+'26_MEinNFW_comparison_project_'+part+'_'+lmcut+'.png')
+make_plot(R3Dnfw[m],10**(lMEin_rho[m]-lMNFW_rho[m]),(rc/np.array(main.r_max))[mfit][m])
+plt.ylabel('$M^{Ein}_{200}/M^{NFW}_{200}$')
+plt.xlabel('$R^{NFW}_{3D}$')
+plt.axhline(1)
+plt.ylim([0.5,2.])
+plt.savefig(plots_path+'26_MEinNFW_comparison_'+part+'_'+lmcut+'.png')
 
+m = np.isfinite(R3Dnfw)*(R3Dnfw > 0)
+make_plot(np.array(q2d)[mfit][m],R3Dnfw[m],(rc/np.array(main.r_max))[mfit][m])
+
+m = np.isfinite(R2Dein)*(R2Dein > 0)*(R2Dein < 1)
+make_plot(np.array(s)[mfit][m],R2Dein[m],(rc/np.array(main.r_max))[mfit][m])
+
+from colossus.cosmology import cosmology  
+params = {'flat': True, 'H0': 70.0, 'Om0': 0.25, 'Ob0': 0.044, 'sigma8': 0.8, 'ns': 0.95}
+cosmology.addCosmology('MICE', params)
+cosmo = cosmology.setCosmology('MICE')
