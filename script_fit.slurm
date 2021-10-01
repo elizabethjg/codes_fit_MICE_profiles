@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=fitpro
+#SBATCH --job-name=2_2
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=56
 #SBATCH --time=3-0:00:00
@@ -19,4 +19,4 @@ export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
 conda activate py3env
 
-srun python -u fit_MICE_profiles.py
+srun python -u fit_MICE_profiles.py -file $SLURM_JOB_NAME
