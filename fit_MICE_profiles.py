@@ -82,10 +82,10 @@ def fit_profile(pro,z,plot=False):
          MDelta = Msum[j200]
          Delta  = ((Msum/Vsum)/roc_mpc)[j200]
          
-         mrho = (rho > 0.)*(r > 0.15)
-         mS = (S > 0.)*(r > 0.15)
-         mrhoe = (rho_E > 0.)*(r > 0.15)
-         mSe = (S_E > 0.)*(r > 0.15)
+         mrho = (rho > 0.)#*(r > 0.15)
+         mS = (S > 0.)#*(r > 0.15)
+         mrhoe = (rho_E > 0.)#*(r > 0.15)
+         mSe = (S_E > 0.)#*(r > 0.15)
          
          
          if mrho.sum() > 4. and mS.sum() > 4. and mrhoe.sum() > 4. and mSe.sum() > 4.:

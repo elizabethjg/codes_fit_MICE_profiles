@@ -205,7 +205,7 @@ u2 = np.array(main.Epot)
 
 mrelax2 = ((2.*k2)/abs(u2)) < 1.35
 
-mcut = np.array(main.lgM > 13.5)#*mrelax
+mcut = np.array(main.lgM > 10.)#*mrelax
 lmcut = '13.5'
 
 
