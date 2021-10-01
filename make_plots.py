@@ -14,19 +14,20 @@ cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 part = '2_2'
 # part = '8_5_2'
 
-main0 = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2') 
-profiles0 = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
+main = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2') 
+profiles = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
 # masses = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass_hM.csv.bz2')
-masses = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass_randsample.csv.bz2')
+# masses = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass_randsample.csv.bz2')
+masses = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass.csv.bz2')
 
 
-overlap = main0.column_halo_id[np.in1d(main0.column_halo_id,masses.column_halo_id)]
+# overlap = main0.column_halo_id[np.in1d(main0.column_halo_id,masses.column_halo_id)]
 
-main     = main0.loc[overlap]
-profiles = profiles0[overlap]
+# main     = main0.loc[overlap]
+# profiles = profiles0[overlap]
 
-u,i = np.unique(masses.column_halo_id,return_index=True)
-masses   = masses.loc[i]
+# u,i = np.unique(masses.column_halo_id,return_index=True)
+# masses   = masses.loc[i]
 
 zhalos = main.redshift
 
@@ -205,7 +206,7 @@ u2 = np.array(main.Epot)
 mrelax2 = ((2.*k2)/abs(u2)) < 1.35
 
 mcut = np.array(main.lgM > 13.5)#*mrelax
-lmcut = 'hM'
+lmcut = '13.5'
 
 
 # RELAXATION 
