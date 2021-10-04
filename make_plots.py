@@ -205,7 +205,7 @@ u2 = np.array(main.Epot)
 
 mrelax2 = ((2.*k2)/abs(u2)) < 1.35
 
-mcut = np.array(main.lgM > 10.)#*mrelax
+mcut = np.array(main.lgM > 13.5)#*mrelax
 lmcut = '13.5'
 
 
@@ -314,7 +314,7 @@ R2Dein  = np.array(masses.resEin_S.astype(float))[mfit]
 
 R3Dnfw_E  = np.array(masses.resNFW_rho_E.astype(float))[mfit]
 R2Dnfw_E  = np.array(masses.resNFW_S_E.astype(float))[mfit]
-R3Dein_E  = np.array(masses.resEin_E.astype(float))[mfit]
+R3Dein_E  = np.array(masses.resEin_rho_E.astype(float))[mfit]
 R2Dein_E  = np.array(masses.resEin_S_E.astype(float))[mfit]
 
 lgMfof = np.array(main.lgM)[mfit]

@@ -164,7 +164,7 @@ Sf      = Sigma_fit(rp[mr],Sp[mr]/nhalos,mpA[mr]/nhalos,z)
 rhof_E    = rho_fit(rp[mr],rhop[mr]/nhalos,mpV[mr]/nhalos,z,'Einasto',rhof.M200,rhof.c200)
 Sf_E      = Sigma_fit(rp[mr],Sp[mr]/nhalos,mpA[mr]/nhalos,z,'Einasto',rhof.M200,rhof.c200)
 
-mr2 = rp > 0.15
+mr2 = rp > 0.05
 
 rhof2    = rho_fit(rp[mr2],rhop[mr2]/nhalos,mpV[mr2]/nhalos,z)
 Sf2      = Sigma_fit(rp[mr2],Sp[mr2]/nhalos,mpA[mr2]/nhalos,z)
