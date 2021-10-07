@@ -8,16 +8,17 @@ import astropy.units as u
 import pandas as pd
 from fit_models import *
 from scipy import stats
-cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
+import argparse
 
+parser = argparse.ArgumentParser()
+parser.add_argument('-file', action='store', dest='file',default='2_2')
+args = parser.parse_args()
+part = args.file
 
-part = '2_2'
-# part = '8_5_2'
+# part = '2_2'
 
 main = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2') 
 profiles = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
-# masses = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass_hM.csv.bz2')
-# masses = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass_randsample.csv.bz2')
 masses = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_mass.csv.bz2')
 
 
@@ -91,14 +92,11 @@ def make_plot(X,Y,Z,zlim=0.3,nbins=20):
     plt.colorbar()
 
 def fit_profile(pro,z,plot=True,halo=''):
-    
-         roc_mpc = cosmo.critical_density(z).to(u.Msun/(u.Mpc)**3).value
      
          r   = pro[2:2+nrings]/1.e3         
          
          a_t = 1./(1.+ z)
          
-         # rbins = ((np.arange(nrings+1)*((0.7*a_t*pro[1]-20)/float(nrings)))+20.)/1000
          rin = 10.
          rbins = ((np.arange(nrings+1)*((1000.-rin)/float(nrings)))+rin)/1000.
          mpV = mp/((4./3.)*np.pi*(rbins[1:]**3 - rbins[:-1]**3)) # mp/V
@@ -110,20 +108,12 @@ def fit_profile(pro,z,plot=True,halo=''):
          rho_E = pro[2+2*nrings:2+3*nrings]
          S     = pro[2+3*nrings:2+4*nrings]
          S_E   = pro[2+4*nrings:]
-
-         Vsum = (4./3.)*np.pi*(rbins[1:]**3)
-         Msum = np.cumsum(rho/mpV)*mp
-         j200 = np.argmin(abs((Msum/Vsum)/(200.*roc_mpc) - 1))
-         MDelta = Msum[j200]
-         Delta  = ((Msum/Vsum)/roc_mpc)[j200]
          
-         mrho = (rho > 0.)#*(r > 0.15)
-         mS = (S > 0.)#*(r > 0.15)
-         mrhoe = (rho_E > 0.)#*(r > 0.15)
-         mSe = (S_E > 0.)#*(r > 0.15)
+         mrho = (rho > 0.)*(r > 0.05)
+         mS = (S > 0.)*(r > 0.05)
+         mrhoe = (rho_E > 0.)*(r > 0.05)
+         mSe = (S_E > 0.)*(r > 0.05)         
          
-         
-         # error = 1.e12*np.ones(len(r))
          
          if mrho.sum() > 4. and mS.sum() > 4. and mrhoe.sum() > 4. and mSe.sum() > 4.:
 
@@ -619,13 +609,3 @@ plt.axhline(1)
 plt.ylim([0.5,2.])
 plt.savefig(plots_path+'26_MEinNFW_comparison_'+part+'_'+lmcut+'.png')
 
-m = np.isfinite(R3Dnfw)*(R3Dnfw > 0)
-make_plot(np.array(q2d)[mfit][m],R3Dnfw[m],(rc/np.array(main.r_max))[mfit][m])
-
-m = np.isfinite(R2Dein)*(R2Dein > 0)*(R2Dein < 1)
-make_plot(np.array(s)[mfit][m],R2Dein[m],(rc/np.array(main.r_max))[mfit][m])
-
-from colossus.cosmology import cosmology  
-params = {'flat': True, 'H0': 70.0, 'Om0': 0.25, 'Ob0': 0.044, 'sigma8': 0.8, 'ns': 0.95}
-cosmology.addCosmology('MICE', params)
-cosmo = cosmology.setCosmology('MICE')
