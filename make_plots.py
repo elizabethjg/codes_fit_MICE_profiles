@@ -9,13 +9,15 @@ import pandas as pd
 from fit_models import *
 from scipy import stats
 import argparse
-
+import matplotlib.pyplot as plt
 parser = argparse.ArgumentParser()
 parser.add_argument('-file', action='store', dest='file',default='2_2')
 args = parser.parse_args()
 part = args.file
 
 # part = '2_2'
+
+print(part)
 
 main = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2') 
 profiles = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
