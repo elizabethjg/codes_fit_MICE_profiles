@@ -553,7 +553,7 @@ plt.savefig(plots_path+'22_alpha_Ein_comparison_3D_elliptical_'+part+'_'+lmcut+'
 # Mass/concentration
 # M_RATIO
 
-m = np.isfinite(cNFW_rho)*np.isfinite(lMNFW_rho)*(lMNFW_rho<15.)*(lMNFW_rho>11.)*(zhalos[mfit] < 0.3)
+m = np.isfinite(cNFW_rho)*np.isfinite(lMNFW_rho)*(lMNFW_rho<15.)*(lMNFW_rho>11.)*(zhalos[mfit] < np.median(zhalos[mfit])+0.05)*(zhalos[mfit] > np.median(zhalos[mfit])-0.05)
 make_plot(np.array(lMNFW_rho)[m],cNFW_rho[m],(rc/np.array(main.r_max))[mfit][m])
 plt.plot(np.arange(13,15,0.1),c200_duffy(10**np.arange(13.,15,0.1),np.median(zhalos[mfit][m])))
 plt.xlabel('$\log M_{200}$')
@@ -569,7 +569,7 @@ plt.ylabel('$c_{200}$')
 plt.ylim([0,6])
 plt.savefig(plots_path+'23_z_cNFW_comparison_project_'+part+'_'+lmcut+'.png')
 
-m = np.isfinite(cEin_rho)*np.isfinite(lMEin_rho)*(lMEin_rho<15.)*(lMEin_rho>11.)*(zhalos[mfit] < 0.3)*(cEin_rho > 0)#*(R3Dein < 0.1)
+m = np.isfinite(cEin_rho)*np.isfinite(lMEin_rho)*(lMEin_rho<15.)*(lMEin_rho>11.)*(zhalos[mfit] < np.median(zhalos[mfit])+0.05)*(zhalos[mfit] > np.median(zhalos[mfit])-0.05)*(cEin_rho > 0)#*(R3Dein < 0.1)
 make_plot(np.array(lMEin_rho)[m],np.log10(cEin_rho)[m],(rc/np.array(main.r_max))[mfit][m])
 plt.plot(np.arange(11,15,0.1),np.log10(c200_duffy(10**np.arange(11.,15,0.1),np.median(zhalos[mfit][m]),'Einasto')))
 plt.plot(np.arange(11,15,0.1),np.log10(c200_duffy(10**np.arange(11.,15,0.1),2.,'Einasto')))
@@ -586,7 +586,7 @@ plt.ylabel('$c_{200}$')
 plt.ylim([0,6])
 plt.savefig(plots_path+'24_z_cEin_comparison_project_'+part+'_'+lmcut+'.png')
 
-m = np.isfinite(alpha_rhoE)*np.isfinite(lMEin_rhoE)*(lMEin_rhoE<15.)*(lMEin_rhoE>11.)*(zhalos[mfit] < 0.3)#*(R3Dein < 0.1)
+m = np.isfinite(alpha_rhoE)*np.isfinite(lMEin_rhoE)*(lMEin_rhoE<15.)*(lMEin_rhoE>11.)*(zhalos[mfit] < np.median(zhalos[mfit])+0.05)*(zhalos[mfit] > np.median(zhalos[mfit])-0.05)#*(R3Dein < 0.1)
 make_plot(np.array(lMEin_rhoE)[m],alpha_rhoE[m],(rc/np.array(main.r_max))[mfit][m])
 plt.xlabel('$\log M_{200}$')
 plt.ylabel(r'$\alpha$')
