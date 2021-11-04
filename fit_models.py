@@ -37,24 +37,27 @@ class Sigma_fit:
         
             out = p.fit(R*1000., Sigma/(1.e3**2), 'Sigma', q_err = err/(1.e3**2), tolerance = 1.e-04,verbose=False)
             
+            BIN= len(Sigma)
             
             if model == 'NFW':
                 
                 rhos,rs = out['x']
                 prof = profile_nfw.NFWProfile(rhos = rhos, rs = rs)
                 alpha = -999.
+                Ndoff = float(BIN - 2)
                 
             elif model == 'Einasto':
                 
                 rhos,rs,alpha = out['x']
                 prof = profile_einasto.EinastoProfile(rhos = rhos, rs = rs, alpha = alpha)
+                Ndoff = float(BIN - 3)
             
             ajuste = prof.surfaceDensity(R*1000.)*(1.e3**2)
             yplot  = prof.surfaceDensity(xplot*1000.)*(1.e3**2)
             
-            BIN= len(Sigma)
             
-            res=np.sqrt(((((np.log10(ajuste)-np.log10(Sigma))**2)).sum())/float(BIN-2))
+            
+            res=np.sqrt(((((np.log10(ajuste)-np.log10(Sigma))**2)).sum())/Ndoff)
 
             M200 = prof.MDelta(z,'200c')
             c200 = prof.RDelta(z,'200c')/rs
@@ -101,24 +104,25 @@ class rho_fit:
         
             out = p.fit(R*1000., rho/(1.e3**3), 'rho', q_err = err/(1.e3**3), tolerance = 1.e-04,verbose=False)
             
+            BIN= len(rho)
             
             if model == 'NFW':
                 
                 rhos,rs = out['x']
                 prof = profile_nfw.NFWProfile(rhos = rhos, rs = rs)
                 alpha = -999.
+                Ndoff = float(BIN - 2)
                 
             elif model == 'Einasto':
                 
                 rhos,rs,alpha = out['x']
                 prof = profile_einasto.EinastoProfile(rhos = rhos, rs = rs, alpha = alpha)
+                Ndoff = float(BIN - 3)
             
             ajuste = prof.density(R*1000.)*(1.e3**3)
             yplot  = prof.density(xplot*1000.)*(1.e3**3)
             
-            BIN= len(rho)
-            
-            res=np.sqrt(((((np.log10(ajuste)-np.log10(rho))**2)).sum())/float(BIN-2))
+            res=np.sqrt(((((np.log10(ajuste)-np.log10(rho))**2)).sum())/Ndoff)
             
             M200 = prof.MDelta(z,'200c')
             c200 = prof.RDelta(z,'200c')/rs
