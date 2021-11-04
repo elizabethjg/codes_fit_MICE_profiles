@@ -24,7 +24,7 @@ for i in np.arange(1,11,1):
             continue
             
         mask = main.T[1] > 1000.
-        join0 = np.concatenate((main[:,:].T,profiles[:,2:].T,masses[:,1:].T)).T
+        join0 = np.concatenate((main[mask,:].T,profiles[mask,2:].T,masses[mask,1:].T)).T
         join = np.concatenate((join,join0))
         
 join = join[1:,:]
