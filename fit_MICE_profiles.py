@@ -155,7 +155,7 @@ def fit_profile(pro,z,plot=False):
                     np.log10(S_f.M200),S_f.c200,S_f.res,mS.sum(),
                     np.log10(S_E_f.M200),S_E_f.c200,S_E_f.res,mSe.sum(),
                     np.log10(rho_f_E.M200),rho_f_E.c200,rho_f_E.alpha,rho_f_E.res,
-                    np.log10(rho_E_f_E.M200),rho_E_f_E.c200,rho_E_f_E.alpha,rho_E_f.res,
+                    np.log10(rho_E_f_E.M200),rho_E_f_E.c200,rho_E_f_E.alpha,rho_E_f_E.res,
                     np.log10(S_f_E.M200),S_f_E.c200,S_f_E.alpha,S_f_E.res,
                     np.log10(S_E_f_E.M200),S_E_f_E.c200,S_E_f_E.alpha,S_E_f_E.res]
                     
@@ -221,7 +221,7 @@ out_file = '/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_ma
 head = 'column_halo_id,lgMDelta,Delta,lgMNFW_rho,cNFW_rho,resNFW_rho,nb_rho,lgMNFW_rho_E,cNFW_rho_E,resNFW_rho_E,nb_rho_E,lgMNFW_S,cNFW_S,resNFW_S,nb_S,lgMNFW_S_E,cNFW_S_E,resNFW_S_E,nb_S_E,lgMEin_rho,cEin_rho,alpha_rho,resEin_rho,lgMEin_rho_E,cEin_rho_E,alpha_rho_E,resEin_rho_E,lgMEin_S,cEin_S,alpha_S,resEin_S,lgMEin_S_E,cEin_S_E,alpha_S_E,resEin_S_E'
 
 
-np.savetxt(out_file,output,fmt=['%10d']+['%5.2f']*34,header=head,comments='',delimiter=',')
+np.savetxt(out_file,output,fmt=['%10d']+['%12.6f']*34,header=head,comments='',delimiter=',')
 
 print('EJECTUTION TIME')
 print((time()-t1)/3600.)

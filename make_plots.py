@@ -41,10 +41,10 @@ plots_path = '/home/elizabeth/plots/'
         
 index = np.arange(len(profiles))
 
-mp = 2.927e10
+
 zhalos = np.array(main.redshift)
 
-
+mp = 2.927e10
 nrings = 25
 
 def c200_duffy(M,z,model = 'NFW'):
