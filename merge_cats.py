@@ -14,6 +14,7 @@ for i in np.arange(1,11,1):
         part = str(i)+'_'+str(j)
         
         print(part)
+        print(len(join))
         
         try:
             main = np.loadtxt(path+'halo_props2_'+part+'_main.csv.bz2',skiprows=1,delimiter=',')
@@ -27,6 +28,6 @@ for i in np.arange(1,11,1):
         join0 = np.concatenate((main[mask,:].T,profiles[mask,2:].T,masses[mask,1:].T)).T
         join = np.concatenate((join,join0))
         
-join = join[1:,:]
+# join = join[1:,:]
 
-np.savetxt('/home/elizabeth/HALO_Props_MICE.cat',join,fmt='%12.6f')
+# np.savetxt('/home/elizabeth/HALO_Props_MICE.cat',join,fmt='%12.6f')
