@@ -21,7 +21,6 @@ conda activate py3env
 
 srun python -u fit_MICE_profiles.py -file '9_1'
 srun python -u fit_MICE_profiles.py -file '7_3'
-srun python -u fit_MICE_profiles.py -file '4_2'
 ##srun python -u fit_MICE_profiles.py -file '1_1'
 ##srun python -u fit_MICE_profiles.py -file '1_2'
 ##srun python -u fit_MICE_profiles.py -file '1_3'
