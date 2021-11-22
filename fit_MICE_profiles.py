@@ -15,13 +15,12 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-file', action='store', dest='file',default='2_2')
 args = parser.parse_args()
+part = args.file
 
 t0 = time()
-
-part = args.file
 cosmo = LambdaCDM(H0=100, Om0=0.25, Ode0=0.75)
 
-ncores   = 56
+ncores   = 32
 main     = pd.read_csv('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_main.csv.bz2')
 profiles = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_'+part+'_pro.csv.bz2',skiprows=1,delimiter=',')
 
@@ -30,8 +29,10 @@ profiles = np.loadtxt('/home/elizabeth/halo_props2/lightconedir_129/halo_props2_
 # rind = np.argsort(np.array(main0.lgM))[-30000:]
 # main = main0.loc[rind]
 # profiles = profiles0[rind]
-
 nrings = 25
+mp = 2.927e10
+zhalos = np.array(main.redshift)
+
 r     = profiles[:,2:2+nrings]/1.e3
 rho   = profiles[:,2+nrings:2+2*nrings]
 rho_E = profiles[:,2+2*nrings:2+3*nrings]
@@ -42,18 +43,13 @@ m = (np.sum(rho>0,axis=1) > 4)*(np.sum(rho_E>0,axis=1) > 4)*(np.sum(S>0,axis=1) 
 m = m*(np.array(main.Npart) > 1000.)
 
 index = np.arange(len(profiles))[m]
+avance = np.linspace(0,len(index)/ncores,10).astype(int)
 
 # j = np.argsort(np.array(main0.lgM))[-1000:]
 # main = main0.loc[j]
 # profiles = profiles0[j]
 
 
-mp = 2.927e10
-zhalos = np.array(main.redshift)
-
-
-
-avance = np.linspace(0,len(index)/ncores,10).astype(int)
 
 def fit_profile(pro,z,plot=False):
     
@@ -91,14 +87,14 @@ def fit_profile(pro,z,plot=False):
          if mrho.sum() > 4. and mS.sum() > 4. and mrhoe.sum() > 4. and mSe.sum() > 4.:
 
 
-            rho_f    = rho_fit(r[mrho],rho[mrho],mpV[mrho],z)
-            rho_E_f    = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z)
-            S_f      = Sigma_fit(r[mS],S[mS],mpA[mS],z)
-            S_E_f      = Sigma_fit(r[mSe],S_E[mSe],mpA[mSe],z)
-            rho_f_E    = rho_fit(r[mrho],rho[mrho],mpV[mrho],z,'Einasto',rho_f.M200,rho_f.c200)
-            rho_E_f_E    = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z,'Einasto',rho_f.M200,rho_f.c200)
-            S_f_E      = Sigma_fit(r[mS],S[mS],mpA[mS],z,'Einasto',rho_f.M200,rho_f.c200)
-            S_E_f_E      = Sigma_fit(r[mSe],S_E[mSe],mpA[mSe],z,'Einasto',rho_f.M200,rho_f.c200)
+            rho_f     = rho_fit(r[mrho],rho[mrho],mpV[mrho],z)
+            rho_E_f   = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z)
+            S_f       = Sigma_fit(r[mS],S[mS],mpA[mS],z)
+            S_E_f     = Sigma_fit(r[mSe],S_E[mSe],mpA[mSe],z)
+            rho_f_E   = rho_fit(r[mrho],rho[mrho],mpV[mrho],z,'Einasto',rho_f.M200,rho_f.c200)
+            rho_E_f_E = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z,'Einasto',rho_f.M200,rho_f.c200)
+            S_f_E     = Sigma_fit(r[mS],S[mS],mpA[mS],z,'Einasto',rho_f.M200,rho_f.c200)
+            S_E_f_E   = Sigma_fit(r[mSe],S_E[mSe],mpA[mSe],z,'Einasto',rho_f.M200,rho_f.c200)
             
             if plot:
                 
@@ -197,7 +193,7 @@ index_splitted = np.split(index,slices)
 t1 = time()
 
 pool = Pool(processes=(ncores))
-salida = pool.map(run_fit_profile, np.array(index_splitted).T)
+salida = pool.map(run_fit_profile, index_splitted)
 pool.terminate()
 
 output = salida[0]
