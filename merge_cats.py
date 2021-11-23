@@ -1,10 +1,8 @@
 import sys
 import numpy as np
 
-
-# path = '/home/eli/Documentos/Astronomia/proyectos/HALO-SHAPE/MICE/MICEv2.0/catalogs/'
 path = '/home/elizabeth/halo_props2/lightconedir_129/'
-path = '/home/eli/Documentos/Astronomia/proyectos/HALO-SHAPE/MICE/MICEv2.0/catalogs/raro/'
+# path = '/home/eli/Documentos/Astronomia/proyectos/HALO-SHAPE/MICE/MICEv2.0/catalogs/raro/'
 join = np.ones((1,214))
 
 
@@ -26,9 +24,9 @@ for i in np.arange(1,11,1):
             continue
             
         mask = main.T[1] > 1000.
-        params = np.concatenate((main[mask,:].T,profiles[mask,2:].T,masses0[mask,1:].T)).T
+        params = np.concatenate((main[mask,:].T,profiles[mask,2:].T,masses[mask,1:].T)).T
         join = np.concatenate((join,params))
         
-# join = join[1:,:]
+join = join[1:,:]
 
-# np.savetxt('/home/elizabeth/HALO_Props_MICE.cat',join,fmt='%12.6f')
+np.savetxt('/home/elizabeth/HALO_Props_MICE.cat',join,fmt='%12.6f')
