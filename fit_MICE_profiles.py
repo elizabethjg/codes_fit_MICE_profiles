@@ -1,8 +1,6 @@
 import sys
-sys.path.append('/mnt/projects/lensing/lens_codes_v3.7')
 import numpy as np
 from astropy.cosmology import LambdaCDM
-from fit_profiles_curvefit import *
 from multiprocessing import Pool
 from multiprocessing import Process
 import astropy.units as u
