@@ -19,12 +19,12 @@ export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
 conda activate py3env
 
-srun python -u fit_MICE_profiles.py -file '4_2'
+##srun python -u fit_MICE_profiles.py -file '4_2'
 ##srun python -u fit_MICE_profiles.py -file '2_1'
-##srun python -u fit_MICE_profiles.py -file '2_2'
-##srun python -u fit_MICE_profiles.py -file '2_3'
-##srun python -u fit_MICE_profiles.py -file '2_4'
-##srun python -u fit_MICE_profiles.py -file '2_5'
+srun python -u fit_MICE_profiles.py -file '2_2'
+srun python -u fit_MICE_profiles.py -file '2_3'
+srun python -u fit_MICE_profiles.py -file '2_4'
+srun python -u fit_MICE_profiles.py -file '2_5'
 ##srun python -u fit_MICE_profiles.py -file '2_6'
 ##srun python -u fit_MICE_profiles.py -file '2_7'
 ##srun python -u fit_MICE_profiles.py -file '2_8'
