@@ -23,18 +23,6 @@ plot_path = '/home/eli/Documentos/Astronomia/proyectos/HALO-SHAPE/MICE/plot_pape
 mp = 2.927e10
 nrings = 25
 
-def c200_duffy(M,z,model = 'NFW',relax=False):
-    #calculo de c usando la relacion de Duffy et al 2008
-    if model == 'NFW' and not relax:
-        return 5.71*((M/2.e12)**-0.084)*((1.+z)**-0.47)
-    if model == 'NFW' and relax:
-        return 6.71*((M/2.e12)**-0.091)*((1.+z)**-0.44)
-    if model == 'Einasto' and not relax:
-        return 6.4*((M/2.e12)**-0.108)*((1.+z)**-0.62)
-    if model == 'Einasto' and relax:
-        return 7.74*((M/2.e12)**-0.123)*((1.+z)**-0.60)
-
-
 def q_75(y):
     return np.quantile(y, 0.75)
 
@@ -97,173 +85,6 @@ def make_plot2(X,Y,color='C0',nbins=20,plt=plt,label='',error = False,lw=1,lt='-
         plt.plot(x,q50,lt,color=color,label=label,lw=lw)
         plt.fill_between(x,q75,q25,color=color,alpha=0.2)
 
-
-def fit_profile(pro,z,plot=True,halo=''):
-     
-         r,rho,rho_E,S,S_E   = pro
-         
-         a_t = 1./(1.+ z)
-         
-         rin = 10.
-         rbins = ((np.arange(nrings+1)*((1000.-rin)/float(nrings)))+rin)/1000.
-         mpV = mp/((4./3.)*np.pi*(rbins[1:]**3 - rbins[:-1]**3)) # mp/V
-         mpA = mp/(np.pi*(rbins[1:]**2 - rbins[:-1]**2)) # mp/A
-                  
-         mrho = (rho > 0.)*(r > 0.05)
-         mS = (S > 0.)*(r > 0.05)
-         mrhoe = (rho_E > 0.)*(r > 0.05)
-         mSe = (S_E > 0.)*(r > 0.05)         
-         
-         
-         if mrho.sum() > 4. and mS.sum() > 4. and mrhoe.sum() > 4. and mSe.sum() > 4.:
-
-            rho_f    = rho_fit(r[mrho],rho[mrho],mpV[mrho],z)
-            rho_E_f    = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z)
-            S_f      = Sigma_fit(r[mS],S[mS],mpA[mS],z)
-            S_E_f      = Sigma_fit(r[mSe],S_E[mSe],mpA[mSe],z)
-            rho_f_E    = rho_fit(r[mrho],rho[mrho],mpV[mrho],z,'Einasto',rho_f.M200,rho_f.c200)
-            rho_E_f_E    = rho_fit(r[mrhoe],rho_E[mrhoe],mpV[mrhoe],z,'Einasto',rho_f.M200,rho_f.c200)
-            S_f_E      = Sigma_fit(r[mS],S[mS],mpA[mS],z,'Einasto',rho_f.M200,rho_f.c200)
-            S_E_f_E      = Sigma_fit(r[mSe],S_E[mSe],mpA[mSe],z,'Einasto',rho_f.M200,rho_f.c200)
-            
-            if plot:
-                
-                
-                m = rho_f.xplot > r[r>0.].min()
-                m1 = rho_E_f.xplot >  r[r>0.].min()
-                m2 = S_f.xplot >  r[r>0.].min()
-                m3 = S_E_f.xplot > r[r>0.].min()
-                
-            
-                f,ax = plt.subplots()                              
-                ax.fill_between(r[mrho],(rho+mpV*0.5)[mrho],(rho-mpV*0.5)[mrho],color='C0',alpha=0.5)
-                ax.plot(r[mrho],rho[mrho],'C7',lw=4)
-                ax.plot(rho_f.xplot[m],rho_f.yplot[m],'C2',label='NFW')
-                ax.plot(rho_f_E.xplot[m],rho_f_E.yplot[m],'C3',label='Einasto')
-                ax.fill_between(r[mrhoe],(rho_E+mpV*0.5)[mrhoe],(rho_E-mpV*0.5)[mrhoe],color='C1',alpha=0.5)
-                ax.plot(r[mrhoe],rho_E[mrhoe],'C7--',lw=4)
-                ax.plot(rho_E_f.xplot[m1],rho_E_f.yplot[m1],'C2--')
-                ax.plot(rho_E_f_E.xplot[m1],rho_E_f_E.yplot[m1],'C3--')
-                # ax.axvline(0.7*a_t*pro[1]*1.e-3)
-                
-                f2,ax2 = plt.subplots()                 
-                ax2.fill_between(r[mS],(S+mpA*0.5)[mS],(S-mpA*0.5)[mS],color='C0',alpha=0.5)
-                ax2.plot(r[mS],S[mS],'C7',lw=4)
-                ax2.fill_between(r[mSe],(S_E+mpA*0.5)[mSe],(S_E-mpA*0.5)[mSe],color='C1',alpha=0.5)
-                ax2.plot(r[mSe],S_E[mSe],'C7--',lw=4)
-                ax2.plot(S_f.xplot[m2],S_f.yplot[m2],'C2',label='NFW')
-                ax2.plot(S_f_E.xplot[m2],S_f_E.yplot[m2],'C3',label='Einasto')
-                ax2.plot(S_E_f.xplot[m3],S_E_f.yplot[m3],'C2--')
-                ax2.plot(S_E_f_E.xplot[m3],S_E_f_E.yplot[m3],'C3--')
-                # ax2.axvline(0.7*a_t*pro[1]*1.e-3)
-            
-                ax.legend()
-                ax2.legend()
-                ax.set_xscale('log')
-                ax.set_yscale('log')
-                ax2.set_xscale('log')
-                ax2.set_yscale('log')
-                ax.set_ylim([1.e11,5.e15])
-                ax2.set_ylim([1.e11,1.e15])
-                ax.set_ylabel(r'$\rho [M_\odot h^2/Mpc^3]$')
-                ax.set_xlabel('$r[Mpc/h]$')
-                ax2.set_ylabel(r'$\Sigma [M_\odot h/Mpc^2]$')
-                ax2.set_xlabel('$R[Mpc/h]$')            
-            
-                print(np.log10(rho_f.M200),rho_f.c200)
-         
-                f.savefig(plot_path+'profile_rho_'+part+'_'+halo+'.png')
-                f2.savefig(plot_path+'profile_S_'+part+'_'+halo+'.png')
-
-
-
-'''
-# list_n = np.loadtxt('/mnt/projects/lensing/HALO_SHAPE/MICEv1.0/catalogs/ind_halos/cord.list',dtype=str)
-# main = pd.read_csv('/mnt/projects/lensing/HALO_SHAPE/MICEv1.0/catalogs/halo_props2_8_5_pru_main.csv.bz2')
-# profiles = np.loadtxt('/mnt/projects/lensing/HALO_SHAPE/MICEv1.0/catalogs/halo_props2_8_5_pru_pro.csv.bz2',skiprows=1,delimiter=',')
-
-list_n = np.loadtxt('/home/eli/Documentos/Astronomia/proyectos/HALO-SHAPE/MICE/MICEv1.0/catalogs/ind_halos/cord.list',dtype=str)
-main = pd.read_csv('/home/eli/Documentos/Astronomia/proyectos/HALO-SHAPE/MICE/MICEv1.0/catalogs/halo_props2_8_5_pru_main.csv.bz2')
-profiles = np.loadtxt('/home/eli/Documentos/Astronomia/proyectos/HALO-SHAPE/MICE/MICEv1.0/catalogs/halo_props2_8_5_pru_pro.csv.bz2',skiprows=1,delimiter=',')
-
-rc = np.array(np.sqrt((main.xc - main.xc_rc)**2 + (main.yc - main.yc_rc)**2 + (main.zc - main.zc_rc)**2))
-
-ides = np.array([])
-
-for j in range(len(list_n)):
-    ides = np.append(ides,int(list_n[j][6:]))
-
-ides = np.sort(ides).astype(int)
-
-j = 0#np.argsort(rc)[-5]
-
-# part0 = np.loadtxt('/mnt/projects/lensing/HALO_SHAPE/MICEv1.0/catalogs/ind_halos/coords'+str(ides[j])).T  
-part0 = np.loadtxt('/home/eli/Documentos/Astronomia/proyectos/HALO-SHAPE/MICE/MICEv1.0/catalogs/ind_halos/coords'+str(ides[j])).T  
-
-a_t = 1/(1.+main.redshift[j])
-
-xc = main.xc[j]*1.e-3
-yc = main.yc[j]*1.e-3
-zc = main.zc[j]*1.e-3
-
-xc_rc = main.xc_rc[j]*1.e-3
-yc_rc = main.yc_rc[j]*1.e-3
-zc_rc = main.zc_rc[j]*1.e-3
-
-x0 = a_t*(xc_rc - xc)
-y0 = a_t*(yc_rc - yc)
-z0 = a_t*(zc_rc - zc)
-
-x,y,z = a_t*part0[0]*1.e-3+x0,a_t*part0[1]*1.e-3+y0,a_t*part0[2]*1.e-3+z0
-xp,yp = a_t*part0[6],a_t*part0[7]
-xe,ye,ze = a_t*part0[3],a_t*part0[4],a_t*part0[5]
-xep,yep = a_t*part0[8],a_t*part0[9]
-
-f, ax = plt.subplots(1,3, figsize=(12.7,3.7))
-plt.subplots_adjust(left=0.06, right=0.98, top=0.95, bottom=0.1)
-
-# f.subplots_adjust(hspace=0,wspace=0)
-ax[0].plot(x,y,'C7.',alpha=0.3)
-ax[1].plot(x,z,'C7.',alpha=0.3)
-ax[2].plot(y,z,'C7.',alpha=0.3)
-ax[0].plot(x0,y0,'C3o')
-ax[1].plot(x0,z0,'C3o')
-ax[2].plot(y0,z0,'C3o')
-ax[0].plot(0,0,'C1o')
-ax[1].plot(0,0,'C1o')
-ax[2].plot(0,0,'C1o')
-
-ax[0].set_xlim([-1.01,1.01])
-ax[0].set_ylim([-1.01,1.01])
-ax[1].set_xlim([-1.01,1.01])
-ax[1].set_ylim([-1.01,1.01])
-ax[2].set_xlim([-1.01,1.01])
-ax[2].set_ylim([-1.01,1.01])
-
-ax[0].set_yticks([-1,-0.5,0,0.5,1])
-ax[0].set_yticklabels(['-1.0','-0.5','0.0','0.5','1.0'])
-ax[1].set_yticks([-1,-0.5,0,0.5,1])
-ax[1].set_yticklabels(['-1.0','-0.5','0.0','0.5','1.0'])
-ax[2].set_yticks([-1,-0.5,0,0.5,1])
-ax[2].set_yticklabels(['-1.0','-0.5','0.0','0.5','1.0'])
-ax[0].set_xticks([-1,-0.5,0,0.5,1])
-ax[0].set_xticklabels(['-1.0','-0.5','0.0','0.5','1.0'])
-ax[1].set_xticks([-1,-0.5,0,0.5,1])
-ax[1].set_xticklabels(['-1.0','-0.5','0.0','0.5','1.0'])
-ax[2].set_xticks([-1,-0.5,0,0.5,1])
-ax[2].set_xticklabels(['-1.0','-0.5','0.0','0.5','1.0'])
-
-ax[0].set_xlabel('x [kpc]')
-ax[0].set_ylabel('y [kpc]')
-
-ax[1].set_xlabel('x [kpc]')
-ax[1].set_ylabel('z [kpc]')
-
-ax[2].set_xlabel('y [kpc]')
-ax[2].set_ylabel('z [kpc]')
-
-f.savefig(plot_path+'coords.pdf',bbox_inches='tight')
-'''
 
 params = np.loadtxt('/home/eli/Documentos/Astronomia/proyectos/HALO-SHAPE/MICE/HALO_Props_MICE.cat').T
 lgMvir, Rvir, Cvir = np.loadtxt('/home/eli/Documentos/Astronomia/proyectos/HALO-SHAPE/MICE/HALO_Props_vir.cat')
@@ -364,8 +185,15 @@ alpha_S_E    = params[212]
 resEin_S_E   = params[213]
 
 a_t = 1./(1.+ z)
-dens3d = Npart/(np.pi*(0.7*a_t*r_max*1.e-3)**3)
-dens2d = Npart/(np.pi*(0.7*a_t*r_max*1.e-3)**2)
+roc_mpc = cosmo_as.critical_density(z).to(u.Msun/(u.Mpc)**3).value
+
+Eratio = (2.*K/abs(U))
+
+nu = peaks.peakHeight(10**lgMvir, z)
+
+rc = np.array(np.sqrt((xc - xc_rc)**2 + (yc - yc_rc)**2 + (zc - zc_rc)**2))
+offset = rc/r_max
+index = np.arange(len(params.T))
 
 s    = c3D/a3D
 q    = b3D/a3D
@@ -376,926 +204,208 @@ q2dr = b2Dr/a2Dr
 
 T = (1. - q**2)/(1. - s**2)
 Tr = (1. - qr**2)/(1. - sr**2)
-Eratio = (2.*K/abs(U))
 
-nu = peaks.peakHeight(10**lgMvir, z)
+V = (4./3.)*np.pi*(((a_t*r_max*1.e-3)**3))
+dens3d = ((mp*Npart)/V)/roc_mpc
 
-rc = np.array(np.sqrt((xc - xc_rc)**2 + (yc - yc_rc)**2 + (zc - zc_rc)**2))
-offset = rc/r_max
-index = np.arange(len(params.T))
+Ve = (4./3.)*np.pi*(((a_t*r_max*1.e-3)**3)*q*s)
+dens3de = ((mp*Npart)/Ve)/roc_mpc
 
-mraro = ((index > 229238)*(index < 241750))+((index > 423721)*(index < 430222))+((index > 464672)*(index < 468526))
 mfit_NFW = (cNFW_rho > 1.)*(cNFW_S > 1.)*(cNFW_S_E > 1.)*(cNFW_rho_E > 1.)*(lgMNFW_rho > 12)*(lgMNFW_S > 12)*(lgMNFW_S_E > 12)*(lgMNFW_rho_E > 12)*(cNFW_rho < 15)*(cNFW_S < 15)*(cNFW_S_E < 15)*(cNFW_rho_E < 15)
 mfit_Ein = (cEin_rho > 1.)*(cEin_S > 1.)*(cEin_S_E > 1.)*(cEin_rho_E > 1.)*(lgMEin_rho > 12)*(lgMEin_S > 12)*(lgMEin_S_E > 12)*(lgMEin_rho_E > 12)*(cEin_rho < 15)*(cEin_S < 15)*(cEin_S_E < 15)*(cEin_rho_E < 15)*(alpha_rho > 0.)*(alpha_rho_E > 0.)
 
-mfit = mfit_NFW*mfit_Ein*(~mraro)
+mfit = mfit_NFW*mfit_Ein#*(~mraro)
 
 mrelax = (offset < 0.1)*(Eratio < 1.35)
 
-#################
-# RESIDUALS
-#################
-#-------------------
-# WITH Npart
-# 3D
+mres1 = mfit*(dens3d > 20)*(dens3d < 40)
+mres2 = mfit*(dens3de > 100)*(dens3de < 150)
+
 '''
-m = mfit
-f, ax = plt.subplots(1,2, figsize=(6,3),sharex=True,sharey=True)
-f.subplots_adjust(hspace=0,wspace=0)
-make_plot2(np.log10(Npart)[m],resNFW_rho[m],'orangered',10,plt=ax[0],label='NFW')
-make_plot2(np.log10(Npart)[m],resEin_rho[m],'seagreen',10,plt=ax[0],label='Einasto')
-make_plot2(np.log10(Npart)[m],resNFW_rho_E[m],'orangered',10,plt=ax[1])
-make_plot2(np.log10(Npart)[m],resEin_rho_E[m],'seagreen',10,plt=ax[1])
-ax[0].legend(loc=2,frameon=False)
-ax[0].set_ylim([0.03,0.25])
-ax[0].text(0.02,0.2,'Spherical')
-ax[1].text(0.02,0.2,'Elliptical')
-ax[0].set_xlabel(r'$\log N_{PART}$')
-ax[1].set_xlabel(r'$\log N_{PART}$')
-ax[0].set_ylabel('$\delta_{3D}$')
-f.savefig(plot_path+'res_npart1.pdf',bbox_inches='tight')
-# 2D
-m = mfit
-f, ax = plt.subplots(1,2, figsize=(6,3),sharex=True,sharey=True)
-f.subplots_adjust(hspace=0,wspace=0)
-make_plot2(np.log10(Npart[m]),resNFW_S[m],'orangered',10,plt=ax[0],label='NFW')
-make_plot2(np.log10(Npart[m]),resEin_S[m],'seagreen',10,plt=ax[0],label='Einasto')
-make_plot2(np.log10(Npart[m]),resNFW_S_E[m],'orangered',10,plt=ax[1])
-make_plot2(np.log10(Npart[m]),resEin_S_E[m],'seagreen',10,plt=ax[1])
-ax[0].text(0.02,0.2,'Spherical')
-ax[1].text(0.02,0.2,'Elliptical')
-ax[0].set_ylim([0.03,0.25])
-ax[0].set_xlabel(r'$\log N_{PART}$')
-ax[1].set_xlabel(r'$\log N_{PART}$')
-ax[0].set_ylabel('$\delta_{2D}$')
-f.savefig(plot_path+'res_npart2.pdf',bbox_inches='tight')
-#-------------------
-# WITH concentration
-# 3D
-m = mfit*(Npart>15000)*(cNFW_rho > 0.)*(cNFW_rho_E > 0.)*(cEin_rho > 0.)*(cEin_rho_E > 0.)*(cNFW_rho < 10.)*(cNFW_rho_E < 10.)*(cEin_rho < 10.)*(cEin_rho_E < 10.)
-f, ax = plt.subplots(1,2, figsize=(6,3),sharex=True,sharey=True)
-f.subplots_adjust(hspace=0,wspace=0)
-make_plot2((cNFW_rho)[m],resNFW_rho[m],'orangered',10,plt=ax[0],label='NFW')
-make_plot2((cEin_rho)[m],resEin_rho[m],'seagreen',10,plt=ax[0],label='Einasto')
-make_plot2((cNFW_rho_E)[m],resNFW_rho_E[m],'orangered',10,plt=ax[1])
-make_plot2((cEin_rho_E)[m],resEin_rho_E[m],'seagreen',10,plt=ax[1])
-ax[0].legend(loc=2,frameon=False)
-ax[0].set_ylim([0.03,0.25])
-ax[0].text(0.35,0.45,'Spherical')
-ax[1].text(0.35,0.45,'Elliptical')
-ax[0].set_xlabel(r'$c_{200}$')
-ax[1].set_xlabel(r'$c_{200}$')
-ax[0].set_ylabel('$\delta_{3D}$')
-f.savefig(plot_path+'res_con1.pdf',bbox_inches='tight')
-# 2D
-m = mfit*(Npart>1000)*(Npart<1100)*(cNFW_S > 0.)*(cNFW_S_E > 0.)*(cEin_S > 0.)*(cEin_S_E > 0.)*(cNFW_S < 10.)*(cNFW_S_E < 10.)*(cEin_S < 10.)*(cEin_S_E < 10.)
-f, ax = plt.subplots(1,2, figsize=(6,3),sharex=True,sharey=True)
-f.subplots_adjust(hspace=0,wspace=0)
-make_plot2((cNFW_S[m]),resNFW_S[m],'orangered',10,plt=ax[0],label='NFW')
-make_plot2((cEin_S[m]),resEin_S[m],'seagreen',10,plt=ax[0],label='Einasto')
-make_plot2((cNFW_S_E[m]),resNFW_S_E[m],'orangered',10,plt=ax[1])
-make_plot2((cEin_S_E[m]),resEin_S_E[m],'seagreen',10,plt=ax[1])
-ax[0].text(0.35,0.45,'Spherical')
-ax[1].text(0.35,0.45,'Elliptical')
-ax[0].set_ylim([0.03,0.25])
-ax[0].set_xlabel(r'$c_{200}$')
-ax[1].set_xlabel(r'$c_{200}$')
-ax[0].set_ylabel('$\delta_{2D}$')
-f.savefig(plot_path+'res_con2.pdf',bbox_inches='tight')
 '''
-#-------------------
-# WITH OFFSET
-# m = mfit*(Npart>10000)*(Npart>11000)*(offset < 0.4)*(cNFW_rho >2)*(cNFW_rho < 6)
-# mres = mfit*(r200 > 0.6)*(r200 < 0.7)
-mres = mfit*(dens3d > 2500)*(dens3d < 3500)
-f, ax = plt.subplots(2,4, figsize=(12,5),sharey=True)
-f.subplots_adjust(hspace=0,wspace=0)
-ax1 = ax[0]
-ax2 = ax[1]
-
-m = mres*(offset < 0.4)
-make_plot2(offset[m],resNFW_rho[m],'orangered',10,plt=ax1[0],label='NFW')
-make_plot2(offset[m],resEin_rho[m],'seagreen',10,plt=ax1[0],label='Einasto')
-make_plot2(offset[m],resNFW_S[m],'orangered',10,plt=ax2[0],label='NFW')
-make_plot2(offset[m],resEin_S[m],'seagreen',10,plt=ax2[0],label='Einasto')
-ax1[0].axvline(0.1,color='gold')
-ax2[0].axvline(0.1,color='gold')
-ax1[0].set_xlim([0.015,0.38])
-ax2[0].set_xlim([0.015,0.38])
-ax1[0].set_xlabel(r'$r_c/r_{MAX}$')
-ax2[0].set_xlabel(r'$r_c/r_{MAX}$')
-ax1[0].set_ylabel('$\delta_{3D}$')
-ax2[0].set_ylabel('$\delta_{2D}$')
-# ------------------------
-# WITH ERATIO
-m = mres*(Eratio < 1.5)
-# m = mfit*(Eratio < 1.5)*(Npart>10000)*(Npart<11000)*(cNFW_rho >2)*(cNFW_rho < 6)
-make_plot2(Eratio[m],resNFW_rho[m],'orangered',10,plt=ax1[1],label='NFW')
-make_plot2(Eratio[m],resEin_rho[m],'seagreen',10,plt=ax1[1],label='Einasto')
-ax1[1].legend(loc=2,frameon=False)
-make_plot2(Eratio[m],resNFW_S[m],'orangered',10,plt=ax2[1],label='NFW')
-make_plot2(Eratio[m],resEin_S[m],'seagreen',10,plt=ax2[1],label='Einasto')
-ax1[1].axvline(1.35,color='gold')
-ax2[1].axvline(1.35,color='gold')
-ax1[1].set_xlim([1.13,1.49])
-ax2[1].set_xlim([1.13,1.49])
-ax1[1].set_xlabel(r'$2K/|W|$')
-ax2[1].set_xlabel(r'$2K/|W|$')
-# ------------------------
-# WITH M200
-# 3D
-m = mres*mrelax*(lgM < 14.5)
-ax1[2].plot([-1,-1],[-2,-1],'k--',label='relaxed')
-ax1[2].legend(frameon=False)
-make_plot2(lgM[m],resNFW_rho[m],'orangered',10,plt=ax1[2],label='NFW',lt='--')
-make_plot2(lgM[m],resNFW_S[m],'orangered',10,plt=ax2[2],label='NFW',lt='--')
-make_plot2(lgM[m],resEin_rho[m],'seagreen',10,plt=ax1[2],label='Einasto',lt='--')
-make_plot2(lgM[m],resEin_S[m],'seagreen',10,plt=ax2[2],label='Einasto',lt='--')
-ax1[2].set_xlim([13.45,14.47])
-ax2[2].set_xlim([13.45,14.47])
-ax2[2].set_xlabel(r'$M_{FOF}$')
-# ------------------------
-# WITH z
-# 3D
-m = mres*mrelax
-make_plot2(z[m],resNFW_rho[m],'orangered',10,plt=ax1[3],label='NFW',lt='--')
-make_plot2(z[m],resEin_rho[m],'seagreen',10,plt=ax1[3],label='Einasto',lt='--')
-make_plot2(z[m],resNFW_S[m],'orangered',10,plt=ax2[3],label='NFW',lt='--')
-make_plot2(z[m],resEin_S[m],'seagreen',10,plt=ax2[3],label='Einasto',lt='--')
-ax1[3].set_xlim([0.2,1.4])
-ax2[3].set_xlim([0.2,1.4])
-ax1[3].set_xlabel(r'$z$')
-ax2[3].set_xlabel(r'$z$')
-ax2[3].set_ylim([0.02,0.25])
-f.savefig(plot_path+'res_relax.pdf',bbox_inches='tight')
-
-# WITH SHAPE
-f, ax = plt.subplots(2,1, figsize=(5,6),sharey=True)
-# f.subplots_adjust(hspace=0,wspace=0)
-# m = mres*mrelax
-# make_plot2(sr[m],resNFW_rho[m],'orangered',10,plt=ax[0],label='NFW',lt='--',error=True)
-# make_plot2(sr[m],resEin_rho[m],'seagreen',10,plt=ax[0],label='Einasto',lt='--',error=True)
-# make_plot2(q2dr[m],resNFW_S[m],'orangered',10,plt=ax[1],label='NFW',lt='--',error=True)
-# make_plot2(q2dr[m],resEin_S[m],'seagreen',10,plt=ax[1],label='Einasto',lt='--',error=True)
-m = mres*(s > 0.35)*(lgM > 14.)*(lgM < 14.3)
-make_plot2(s[m],resNFW_rho[m],'orangered',10,plt=ax[0],label='NFW')
-make_plot2(s[m],resEin_rho[m],'seagreen',10,plt=ax[0],label='Einasto')
-ax[0].plot([-1,-1],[-2,-1],'k--',label='relaxed')
-ax[0].legend(frameon=False)
-m = mres*mrelax*(s > 0.35)
-make_plot2(s[m],resNFW_rho[m],'orangered',10,plt=ax[0],label='NFW',lt='--')
-make_plot2(s[m],resEin_rho[m],'seagreen',10,plt=ax[0],label='Einasto',lt='--')
-m = mres*(q2d > 0.35)
-make_plot2(q2d[m],resNFW_S[m],'orangered',10,plt=ax[1],label='NFW')
-make_plot2(q2d[m],resEin_S[m],'seagreen',10,plt=ax[1],label='Einasto')
-m = mres*mrelax*(q2d > 0.35)
-make_plot2(q2d[m],resNFW_S[m],'orangered',10,plt=ax[1],label='NFW',lt='--')
-make_plot2(q2d[m],resEin_S[m],'seagreen',10,plt=ax[1],label='Einasto',lt='--')
-ax[1].set_ylim([0.02,0.20])
-ax[0].set_xlim([0.36,0.92])
-ax[1].set_xlim([0.36,0.98])
-ax[1].set_xlabel('$q$')
-ax[0].set_xlabel('$S$')
-ax[1].set_ylabel('$\delta_{2D}$')
-ax[0].set_ylabel('$\delta_{3D}$')
-f.savefig(plot_path+'res_relax_shape.pdf',bbox_inches='tight')
-#################
-# MASS FOF
-#################
-# MFOF with mass and z
-#################
-f, ax = plt.subplots(2,2, figsize=(8,6),sharey=True)
-# f.subplots_adjust(hspace=0,wspace=0)
-
-m = mfit*(z > 0.4)*(z < 0.5)*(lgM < 14.5)*(dens > 2500)*(dens < 3500)
-make_plot2(lgM[m],10**(lgMNFW_rho - lgM)[m],'orangered',10,label='NFW',error=True,lw=1,plt=ax[0,0])
-make_plot2(lgM[m],10**(lgMEin_rho - lgM)[m],'seagreen',10,label='Einasto',error=True,lw=1,plt=ax[0,0])
-# ax[0,0].plot([-1,-1],[-1,-1],'k--',label='relaxed')
-ax[0,0].legend(frameon=False)
-
-m = mfit*(z > 0.4)*(z < 0.5)*mrelax*(lgM < 14.5)*(dens > 2500)*(dens < 3500)
-make_plot2(lgM[m],10**(lgMNFW_rho - lgM)[m],'orangered',10,label='NFW',error=True,lw=1,plt=ax[0,0],lt='--')
-make_plot2(lgM[m],10**(lgMEin_rho - lgM)[m],'seagreen',10,label='Einasto',error=True,lw=1,plt=ax[0,0],lt='--')
-
-ax[0,0].set_ylabel(r'$M_{200}/M_{FOF}$')
-ax[1,0].set_ylabel(r'$M_{200}/M_{FOF}$')
-ax[0,0].set_xlim([13.43,14.6])
-ax[1,0].set_xlim([13.43,14.6])
-
-m = mfit*(z > 0.9)*(z < 1)*(lgM < 14.5)*(dens > 2500)*(dens < 3500)
-make_plot2(lgM[m],10**(lgMNFW_rho - lgM)[m],'orangered',10,label='NFW',error=True,lw=1,plt=ax[1,0])
-make_plot2(lgM[m],10**(lgMEin_rho - lgM)[m],'seagreen',10,label='Einasto',error=True,lw=1,plt=ax[1,0])
-m = mfit*(z > 0.9)*(z < 1)*(lgM < 14.5)*mrelax*(dens > 2500)*(dens < 3500)
-make_plot2(lgM[m],10**(lgMNFW_rho - lgM)[m],'orangered',10,label='NFW',error=True,lw=1,plt=ax[1,0],lt='--')
-make_plot2(lgM[m],10**(lgMEin_rho - lgM)[m],'seagreen',10,label='Einasto',error=True,lw=1,plt=ax[1,0],lt='--')
-
-ax[1,0].set_xlabel(r'$\log (M_{FOF})$')
-ax[0,0].text(13.6,0.8,'$0.1 < z < 0.25$')
-ax[1,0].text(13.6,0.8,'$0.9 < z < 1.0$')
-
-m = mfit*(z > 0.07)*(z < 1.2)*(lgM > 13.5)*(lgM < 13.7)*(dens > 2500)*(dens < 3500)
-make_plot2(z[m],10**(lgMNFW_rho - lgM)[m],'orangered',10,label='NFW',error=True,lw=1,plt=ax[0,1])
-make_plot2(z[m],10**(lgMEin_rho - lgM)[m],'seagreen',10,label='Einasto',error=True,lw=1,plt=ax[0,1])
-m = mfit*(z > 0.07)*(z < 1.2)*(lgM > 13.5)*(lgM < 13.7)*mrelax*(dens > 2500)*(dens < 3500)
-make_plot2(z[m],10**(lgMNFW_rho - lgM)[m],'orangered',10,label='NFW',error=True,lw=1,plt=ax[0,1],lt='--')
-make_plot2(z[m],10**(lgMEin_rho - lgM)[m],'seagreen',10,label='Einasto',error=True,lw=1,plt=ax[0,1],lt='--')
-
-ax[0,1].set_xlim([0.07,1.23])
-ax[1,1].set_xlim([0.07,1.23])
-
-
-m = mfit*(z > 0.07)*(z < 1.2)*(lgM > 14.0)*(lgM < 14.3)*(dens > 2500)*(dens < 3500)
-make_plot2(z[m],10**(lgMNFW_rho - lgM)[m],'orangered',10,label='NFW',error=True,lw=1,plt=ax[1,1])
-make_plot2(z[m],10**(lgMEin_rho - lgM)[m],'seagreen',10,label='Einasto',error=True,lw=1,plt=ax[1,1])
-m = mfit*(z > 0.07)*(z < 1.2)*(lgM > 14.0)*(lgM < 14.3)*mrelax*(dens > 2500)*(dens < 3500)
-make_plot2(z[m],10**(lgMNFW_rho - lgM)[m],'orangered',10,label='NFW',error=True,lw=1,plt=ax[1,1],lt='--')
-make_plot2(z[m],10**(lgMEin_rho - lgM)[m],'seagreen',10,label='Einasto',error=True,lw=1,plt=ax[1,1],lt='--')
-
-# ax[1,1].set_ylim([0.65,0.82])
-ax[1,1].set_xlabel(r'$z$')
-ax[0,1].text(0.2,0.8,'$13.5 < \log(M_{200}) < 13.57$')
-ax[1,1].text(0.2,0.8,'$14.0 < \log(M_{200}) < 14.3$')
-
-f.savefig(plot_path+'MFOF_M200.pdf',bbox_inches='tight')
-
-# MFOF/M200 shape
-
-f, ax = plt.subplots(2,4, figsize=(12,5),sharey=True)
-f.subplots_adjust(hspace=0,wspace=0)
-
-m = mfit*(z > 0.1)*(z < 0.25)*(lgMNFW_rho > 13.5)*(lgMNFW_rho < 13.7)*mrelax
-make_plot2(s[m],10**(lgMNFW_rho - lgM)[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[0,0])
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.1)*(z < 0.25)*(lgMEin_rho > 13.5)*(lgMEin_rho < 13.7)*mrelax
-make_plot2(s[m],10**(lgMEin_rho - lgM)[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[0,0])
-ax[0,0].legend(loc=4,frameon=False)
-
-m = mfit*(z > 0.1)*(z < 0.25)*(lgMNFW_rho > 13.5)*mrelax*(lgMNFW_rho < 13.7)
-make_plot2(sr[m],10**(lgMNFW_rho - lgM)[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[0,0],lt='--')
-m = mfit*(z > 0.1)*(z < 0.25)*(lgMEin_rho > 13.5)*mrelax*(lgMEin_rho < 13.7)
-make_plot2(sr[m],10**(lgMEin_rho - lgM)[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[0,0],lt='--')
-
-ax[0,0].set_ylabel(r'$M_{200}/M_{FOF}$')
-ax[1,0].set_ylabel(r'$M_{200}/M_{FOF}$')
-
-ax[0,1].plot([-1,-1],[-1,-1],'k-',label='standard')
-ax[0,1].plot([-1,-1],[-1,-1],'k--',label='reduced')
-ax[0,1].legend(loc=4,frameon=False)
-
-m = mfit*(z > 0.9)*(z < 1)*(lgMNFW_rho > 13.5)*(lgMNFW_rho < 13.7)*mrelax
-make_plot2(s[m],10**(lgMNFW_rho - lgM)[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[1,0])
-m = mfit*(z > 0.9)*(z < 1)*(lgMEin_rho > 13.5)*(lgMEin_rho < 13.7)*mrelax
-make_plot2(s[m],10**(lgMEin_rho - lgM)[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[1,0])
-
-m = mfit*(z > 0.9)*(z < 1)*(lgMNFW_rho > 13.5)*mrelax*(lgMNFW_rho < 13.7)
-make_plot2(sr[m],10**(lgMNFW_rho - lgM)[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[1,0],lt='--')
-m = mfit*(z > 0.9)*(z < 1)*(lgMEin_rho > 13.5)*mrelax*(lgMEin_rho < 13.7)
-make_plot2(sr[m],10**(lgMEin_rho - lgM)[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[1,0],lt='--')
-
-ax[1,0].set_xlabel(r'$S$')
-
-ax[0,0].text(0.3,0.9,'$13.5 < M_{200} < 13.7$')
-ax[0,1].text(0.3,0.9,'$14.0 < M_{200} < 14.3$')
-
-
-m = mfit*(z > 0.1)*(z < 0.25)*(lgMNFW_rho > 14.)*(lgMNFW_rho < 14.3)*mrelax
-make_plot2(s[m],10**(lgMNFW_rho - lgM)[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[0,1])
-m = mfit*(z > 0.1)*(z < 0.25)*(lgMEin_rho > 14.)*(lgMEin_rho < 14.3)*mrelax
-make_plot2(s[m],10**(lgMEin_rho - lgM)[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[0,1])
-
-m = mfit*(z > 0.1)*(z < 0.25)*(lgMNFW_rho > 14)*(lgMNFW_rho < 14.3)*mrelax
-make_plot2(sr[m],10**(lgMNFW_rho - lgM)[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[0,1],lt='--')
-m = mfit*(z > 0.1)*(z < 0.25)*(lgMEin_rho > 14)*(lgMEin_rho < 14.3)*mrelax
-make_plot2(sr[m],10**(lgMEin_rho - lgM)[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[0,1],lt='--')
-
-m = mfit*(z > 0.9)*(z < 1.)*(lgMNFW_rho > 14)*(lgMNFW_rho < 14.3)*mrelax
-make_plot2(s[m],10**(lgMNFW_rho - lgM)[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[1,1])
-m = mfit*(z > 0.9)*(z < 1.)*(lgMEin_rho > 14)*(lgMEin_rho < 14.3)*mrelax
-make_plot2(s[m],10**(lgMEin_rho - lgM)[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[1,1])
-
-m = mfit*(z > 0.9)*(z < 1.)*(lgMNFW_rho > 14)*mrelax*(lgMNFW_rho < 14.3)
-make_plot2(sr[m],10**(lgMNFW_rho - lgM)[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[1,1],lt='--')
-m = mfit*(z > 0.9)*(z < 1.)*(lgMEin_rho > 14)*mrelax*(lgMEin_rho < 14.3)
-make_plot2(sr[m],10**(lgMEin_rho - lgM)[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[1,1],lt='--')
-
-ax[1,1].set_xlabel(r'$S$')
-
-m = mfit*(z > 0.1)*(z < 0.25)*(lgMNFW_rho > 13.5)*(lgMNFW_rho < 13.7)*mrelax
-make_plot2(T[m],10**(lgMNFW_rho - lgM)[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[0,2])
-m = mfit*(z > 0.1)*(z < 0.25)*(lgMEin_rho > 13.5)*(lgMEin_rho < 13.7)*mrelax
-make_plot2(T[m],10**(lgMEin_rho - lgM)[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[0,2])
-
-m = mfit*(z > 0.1)*(z < 0.25)*(lgMNFW_rho > 13.5)*mrelax*(lgMNFW_rho < 13.7)
-make_plot2(Tr[m],10**(lgMNFW_rho - lgM)[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[0,2],lt='--')
-m = mfit*(z > 0.1)*(z < 0.25)*(lgMEin_rho > 13.5)*mrelax*(lgMEin_rho < 13.7)
-make_plot2(Tr[m],10**(lgMEin_rho - lgM)[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[0,2],lt='--')
-
-m = mfit*(z > 0.9)*(z < 1)*(lgMNFW_rho > 13.5)*(lgMNFW_rho < 13.7)*mrelax
-make_plot2(T[m],10**(lgMNFW_rho - lgM)[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[1,2])
-m = mfit*(z > 0.9)*(z < 1)*(lgMEin_rho > 13.5)*(lgMEin_rho < 13.7)*mrelax
-make_plot2(T[m],10**(lgMEin_rho - lgM)[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[1,2])
-
-m = mfit*(z > 0.9)*(z < 1)*(lgMNFW_rho > 13.5)*mrelax*(lgMNFW_rho < 13.7)
-make_plot2(Tr[m],10**(lgMNFW_rho - lgM)[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[1,2],lt='--')
-m = mfit*(z > 0.9)*(z < 1)*(lgMEin_rho > 13.5)*mrelax*(lgMEin_rho < 13.7)
-make_plot2(Tr[m],10**(lgMEin_rho - lgM)[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[1,2],lt='--')
-
-ax[1,2].set_xlabel(r'$T$')
-ax[0,2].text(0.2,0.9,'$13.5 < M_{200} < 13.7$')
-ax[0,3].text(0.2,0.9,'$14.0 < M_{200} < 14.3$')
-
-m = mfit*(z > 0.1)*(z < 0.25)*(lgMNFW_rho > 14.)*(lgMNFW_rho < 14.3)*mrelax
-make_plot2(T[m],10**(lgMNFW_rho - lgM)[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[0,3])
-m = mfit*(z > 0.1)*(z < 0.25)*(lgMEin_rho > 14.)*(lgMEin_rho < 14.3)*mrelax
-make_plot2(T[m],10**(lgMEin_rho - lgM)[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[0,3])
-
-m = mfit*(z > 0.1)*(z < 0.25)*(lgMNFW_rho > 14)*(lgMNFW_rho < 14.3)*mrelax
-make_plot2(Tr[m],10**(lgMNFW_rho - lgM)[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[0,3],lt='--')
-m = mfit*(z > 0.1)*(z < 0.25)*(lgMEin_rho > 14)*(lgMEin_rho < 14.3)*mrelax
-make_plot2(Tr[m],10**(lgMEin_rho - lgM)[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[0,3],lt='--')
-
-m = mfit*(z > 0.9)*(z < 1.)*(lgMNFW_rho > 14)*(lgMNFW_rho < 14.3)*mrelax
-make_plot2(T[m],10**(lgMNFW_rho - lgM)[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[1,3])
-m = mfit*(z > 0.9)*(z < 1.)*(lgMEin_rho > 14)*(lgMEin_rho < 14.3)*mrelax
-make_plot2(T[m],10**(lgMEin_rho - lgM)[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[1,3])
-
-m = mfit*(z > 0.9)*(z < 1.)*(lgMNFW_rho > 14)*mrelax*(lgMNFW_rho < 14.3)
-make_plot2(Tr[m],10**(lgMNFW_rho - lgM)[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[1,3],lt='--')
-m = mfit*(z > 0.9)*(z < 1.)*(lgMEin_rho > 14)*mrelax*(lgMEin_rho < 14.3)
-make_plot2(Tr[m],10**(lgMEin_rho - lgM)[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[1,3],lt='--')
-
-ax[1,3].set_xlabel(r'$T$')
-
-ax[0,0].set_xlim([0.2,0.9])
-ax[1,0].set_xlim([0.2,0.9])
-ax[0,1].set_xlim([0.2,0.9])
-ax[1,1].set_xlim([0.2,0.9])
-
-ax[0,2].set_xlim([0.05,0.98])
-ax[1,2].set_xlim([0.05,0.98])
-ax[0,3].set_xlim([0.05,0.98])
-ax[1,3].set_xlim([0.05,0.98])
-ax[1,0].set_ylim([0.5,0.95])
-
-f.savefig(plot_path+'MFOF_M200_shape.pdf',bbox_inches='tight')
-
-plt.figure()
-m = mfit*(Npart > 10000)*(Npart < 12000)
-make_plot2(resNFW_rho[m*(resNFW_rho < 0.3)],10**(lgMNFW_rho - lgM)[m*(resNFW_rho < 0.3)],'orangered',5,label='NFW',error=True,lw=2)
-make_plot2(resEin_rho[m*(resEin_rho < 0.3)],10**(lgMEin_rho - lgM)[m*(resEin_rho < 0.3)],'seagreen',5,label='Einasto',error=True,lw=2)
-plt.legend(frameon=False)
-m = mfit*mrelax*(Npart > 10000)*(Npart < 12000)
-make_plot2(resEin_rho[m*(resEin_rho < 0.3)],10**(lgMEin_rho - lgM)[m*(resEin_rho < 0.3)],'orangered',5,label='NFW',error=True,lw=2,lt='--')
-make_plot2(resNFW_rho[m*(resNFW_rho < 0.3)],10**(lgMNFW_rho - lgM)[m*(resNFW_rho < 0.3)],'seagreen',5,label='NFW',error=True,lw=2,lt='--')
-plt.xlabel('$\delta_{3D}$')
-plt.ylabel(r'$M_{200}/M_{FOF}$')
-
-#########################
-# SPHERICAL VS ELLIPTICAL
-#########################
-
-f, ax = plt.subplots(2,1, figsize=(4,6))
-# f.subplots_adjust(hspace=0,wspace=0)
-m = mfit
-make_plot2(np.log10(Npart)[m],(resNFW_rho/resNFW_rho_E)[m],'orangered',10,label='NFW',lw=1,plt=ax[0])
-make_plot2(np.log10(Npart)[m],(resEin_rho/resEin_rho_E)[m],'seagreen',10,label='Einasto',lw=1,plt=ax[0])
-ax[0].plot([-1,-1],[-2,-1],'k',label='3D',lw=1)
-ax[0].plot([-1,-1],[-2,-1],'k',label='2D',lw=2)
-ax[0].legend(loc=4,frameon=False)
-make_plot2(np.log10(Npart)[m],(resNFW_S/resNFW_S_E)[m],'orangered',10,label='NFW',lw=2,plt=ax[0])
-make_plot2(np.log10(Npart)[m],(resEin_S/resEin_S_E)[m],'seagreen',10,label='NFW',lw=2,plt=ax[0])
-# m = mfit*(Npart > 10000)
-make_plot2(z[m],(resNFW_rho/resNFW_rho_E)[m],'orangered',10,label='NFW',lw=1,plt=ax[1])
-make_plot2(z[m],(resEin_rho/resEin_rho_E)[m],'seagreen',10,label='Einasto',lw=1,plt=ax[1])
-make_plot2(z[m],(resNFW_S/resNFW_S_E)[m],'orangered',10,label='NFW',lw=2,plt=ax[1])
-make_plot2(z[m],(resEin_S/resEin_S_E)[m],'seagreen',10,label='NFW',lw=2,plt=ax[1])
-ax[0].set_xlabel('$\log(N_{PART})$')
-ax[1].set_xlabel('$z$')
-ax[0].set_ylabel('$\delta_{3D} / \delta^E_{3D}$')
-ax[1].set_ylabel('$\delta_{2D} / \delta^E_{2D}$')
-ax[0].set_xlim([3,4.8])
-ax[1].set_xlim([0.05,1.4])
-ax[0].set_ylim([0.45,1.3])
-ax[1].set_ylim([0.45,1.3])
-f.savefig(plot_path+'res_ellip.pdf',bbox_inches='tight')
-
-
-m = mfit*(Npart>10000)
-f, ax = plt.subplots(2,1, figsize=(4,6),sharey=True,sharex=True)
-# f.subplots_adjust(hspace=0,wspace=0)
-make_plot2(s[m],(resNFW_rho/resNFW_rho_E)[m],'orangered',7,label='NFW',lw=1,plt=ax[0])
-make_plot2(s[m],(resEin_rho/resEin_rho_E)[m],'seagreen',7,label='Einasto',lw=1,plt=ax[0])
-ax[0].plot([-1,-1],[-2,-1],'k--',label='relaxed')
-ax[0].legend(loc=4,frameon=False)
-make_plot2(q[m],(resNFW_S/resNFW_S_E)[m],'orangered',7,label='NFW',lw=1,plt=ax[1])
-make_plot2(q[m],(resEin_S/resEin_S_E)[m],'seagreen',7,label='NFW',lw=1,plt=ax[1])
-m = m*mrelax
-make_plot2(s[m],(resNFW_rho/resNFW_rho_E)[m],'orangered',7,label='NFW',lt='--',lw=1,plt=ax[0])
-make_plot2(s[m],(resEin_rho/resEin_rho_E)[m],'seagreen',7,label='NFW',lt='--',lw=1,plt=ax[0])
-make_plot2(q[m],(resNFW_S/resNFW_S_E)[m],'orangered',7,label='NFW',lt='--',lw=1,plt=ax[1])
-make_plot2(q[m],(resEin_S/resEin_S_E)[m],'seagreen',7,label='NFW',lt='--',lw=1,plt=ax[1])
-ax[0].set_xlabel('$S$')
-ax[1].set_xlabel('$q$')
-ax[0].set_ylabel('$\delta_{3D} / \delta^E_{3D}$')
-ax[1].set_ylabel('$\delta_{2D} / \delta^E_{2D}$')
-ax[0].set_xlim([0.1,0.99])
-ax[0].set_ylim([0.2,1.25])
-f.savefig(plot_path+'res_ellip_sub.pdf',bbox_inches='tight')
 
 f, ax = plt.subplots(4,2, figsize=(6,9))
 f.subplots_adjust(hspace=0,wspace=0)
-msel = mfit*(s<0.6)*(s>0.25)*(Npart>10000)*(z < 0.4)
 
-m = msel
-make_plot2(s[m],(resNFW_rho/resNFW_rho_E)[m],'orangered',7,label='NFW',error=False,lw=1,plt=ax[0,0])
-make_plot2(s[m],(resEin_rho/resEin_rho_E)[m],'seagreen',7,label='Einasto',error=False,lw=1,plt=ax[0,0])
-make_plot2(q[m],(resNFW_S/resNFW_S_E)[m],'orangered',7,label='Einasto',error=False,plt=ax[0,1])
-make_plot2(q[m],(resEin_S/resEin_S_E)[m],'seagreen',7,label='Einasto',error=False,plt=ax[0,1])
 
-m = msel*mrelax
-make_plot2(s[m],(resNFW_rho/resNFW_rho_E)[m],'orangered',7,label='NFW',error=False,lw=1,plt=ax[0,0],lt='--')
-make_plot2(s[m],(resEin_rho/resEin_rho_E)[m],'seagreen',7,label='Einasto',error=False,lw=1,plt=ax[0,0],lt='--')
-make_plot2(q[m],(resNFW_S/resNFW_S_E)[m],'orangered',7,label='Einasto',error=False,plt=ax[0,1],lt='--')
-make_plot2(q[m],(resEin_S/resEin_S_E)[m],'seagreen',7,label='Einasto',error=False,plt=ax[0,1],lt='--')
-
-m = msel
-make_plot2(s[m],10**(lgMNFW_rho-lgMNFW_rho_E)[m],'orangered',7,label='NFW',error=False,plt=ax[1,0])
-make_plot2(s[m],10**(lgMEin_rho-lgMEin_rho_E)[m],'seagreen',7,label='Einasto',error=False,plt=ax[1,0])
-make_plot2(q[m],10**(lgMNFW_S-lgMNFW_S_E)[m],'orangered',7,label='NFW',error=False,plt=ax[1,1])
-make_plot2(q[m],10**(lgMEin_S-lgMEin_S_E)[m],'seagreen',7,label='Einasto',error=False,plt=ax[1,1])
-ax[1,1].plot([-1,0],[-1,0],'k--',label='relaxed')
-ax[1,1].legend(frameon=False)
-
-m = msel*mrelax
-make_plot2(s[m],10**(lgMNFW_rho-lgMNFW_rho_E)[m],'orangered',7,label='NFW',error=False,lw=1,plt=ax[1,0],lt='--')
-make_plot2(s[m],10**(lgMEin_rho-lgMEin_rho_E)[m],'seagreen',7,label='Einasto',error=False,plt=ax[1,0],lt='--')
-make_plot2(q[m],10**(lgMNFW_S-lgMNFW_S_E)[m],'orangered',7,label='NFW',error=False,plt=ax[1,1],lt='--')
-make_plot2(q[m],10**(lgMEin_S-lgMEin_S_E)[m],'seagreen',7,label='Einasto',error=False,plt=ax[1,1],lt='--')
-
-m = msel
-make_plot2(s[m],(cNFW_rho[m]/cNFW_rho_E[m]),'orangered',7,label='NFW',error=False,lw=1,plt=ax[2,0])
-make_plot2(s[m],(cEin_rho[m]/cEin_rho_E[m]),'seagreen',7,label='Einasto',error=False,lw=1,plt=ax[2,0])
-make_plot2(q[m],(cNFW_S[m]/cNFW_S_E[m]),'orangered',7,label='NFW',error=False,plt=ax[2,1])
-make_plot2(q[m],(cEin_S[m]/cEin_S_E[m]),'seagreen',7,label='Einasto',error=False,plt=ax[2,1])
-
-m = msel*mrelax
-make_plot2(s[m],(cNFW_rho[m]/cNFW_rho_E[m]),'orangered',7,label='NFW',error=False,lw=1,plt=ax[2,0],lt='--')
-make_plot2(s[m],(cEin_rho[m]/cEin_rho_E[m]),'seagreen',7,label='Einasto',error=False,lw=1,plt=ax[2,0],lt='--')
-make_plot2(q[m],(cNFW_S[m]/cNFW_S_E[m]),'orangered',7,label='NFW',error=False,plt=ax[2,1],lt='--')
-make_plot2(q[m],(cEin_S[m]/cEin_S_E[m]),'seagreen',7,label='Einasto',error=False,plt=ax[2,1],lt='--')
-
-m = msel
-make_plot2(s[m],(alpha_rho[m]/alpha_rho_E[m]),'seagreen',7,label='Einasto',error=False,lw=1,plt=ax[3,0])
-make_plot2(q[m],(alpha_S[m]/alpha_S_E[m]),'seagreen',7,label='Einasto',plt=ax[3,1])
-
-m = msel*mrelax
-make_plot2(s[m],(alpha_rho[m]/alpha_rho_E[m]),'seagreen',7,label='Einasto',error=False,lw=1,plt=ax[3,0],lt='--')
-make_plot2(q[m],(alpha_S[m]/alpha_S_E[m]),'seagreen',7,label='Einasto',plt=ax[3,1],lt='--')
-
-ax[0,0].text(0.5,1.4,'3D')
-ax[0,1].text(0.8,1.4,'2D')
-
-ax[0,0].plot([0,1.4],[1,1],'C7',lw=0.5)
-ax[1,0].plot([0,1.4],[1,1],'C7',lw=0.5)
-ax[2,0].plot([0,1.4],[1,1],'C7',lw=0.5)
-ax[3,0].plot([0,1.4],[1,1],'C7',lw=0.5)
-ax[0,1].plot([0,1.4],[1,1],'C7',lw=0.5)
-ax[1,1].plot([0,1.4],[1,1],'C7',lw=0.5)
-ax[2,1].plot([0,1.4],[1,1],'C7',lw=0.5)
-ax[3,1].plot([0,1.4],[1,1],'C7',lw=0.5)
-
-ax[0,0].set_xlim([0.25,0.6])
-ax[1,0].set_xlim([0.25,0.6])
-ax[2,0].set_xlim([0.25,0.6])
-ax[3,0].set_xlim([0.25,0.6])
-ax[0,1].set_xlim([0.25,0.97])
-ax[1,1].set_xlim([0.25,0.97])
-ax[2,1].set_xlim([0.25,0.97])
-ax[3,1].set_xlim([0.25,0.97])
-
-ax[0,0].set_ylim([0.75,1.55])
-ax[0,1].set_ylim([0.75,1.55])
-ax[1,0].set_ylim([0.83,1.05])
-ax[1,1].set_ylim([0.83,1.05])
-ax[2,0].set_ylim([0.8,1.1])
-ax[2,1].set_ylim([0.8,1.1])
-ax[3,0].set_ylim([0.75,1.55])
-ax[3,1].set_ylim([0.75,1.55])
-
-for j in range(4):
-    ax[j,1].set_yticklabels([])
-
-ax[3,0].set_xlabel('$S$')
-ax[3,1].set_xlabel('$q$')
-ax[0,0].set_ylabel('$\delta/\delta^E$')
-ax[1,0].set_ylabel('$M_{200}/M^E_{200}$')
-ax[2,0].set_ylabel('$c_{200}/c^E_{200}$')
-ax[3,0].set_ylabel(r'$\alpha/\alpha^E$')
-f.savefig(plot_path+'spherical_elliptical.pdf',bbox_inches='tight')
-
-f, ax = plt.subplots(4,1, figsize=(4,9),sharex=True)
-f.subplots_adjust(hspace=0,wspace=0)
-msel = mfit*(s<0.6)*(s>0.25)*(Npart>10000)*(z < 0.4)
-m = msel
-make_plot2(s[m],10**(lgMNFW_S-lgMNFW_S_E)[m],'orangered',10,label='NFW',error=False,lw=1,plt=ax[0])
-m = msel
-make_plot2(s[m],10**(lgMEin_S-lgMEin_S_E)[m],'seagreen',10,label='Einasto',error=False,lw=1,plt=ax[0])
-ax[0].legend(frameon=False)
-
-m = msel*mrelax
-make_plot2(s[m],10**(lgMNFW_S-lgMNFW_S_E)[m],'orangered',10,label='NFW',error=False,lt='--',plt=ax[0])
-m = msel*mrelax
-make_plot2(s[m],10**(lgMEin_S-lgMEin_S_E)[m],'seagreen',10,label='Einasto',error=False,lt='--',plt=ax[0])
-
-m = msel
-make_plot2(s[m],(cNFW_S[m]/cNFW_S_E[m]),'orangered',10,label='NFW',error=False,lw=1,plt=ax[1])
-m = msel
-make_plot2(s[m],(cEin_S[m]/cEin_S_E[m]),'seagreen',10,label='Einasto',error=False,lw=1,plt=ax[1])
-
-m = msel*mrelax
-make_plot2(s[m],(cNFW_S[m]/cNFW_S_E[m]),'orangered',10,label='NFW',error=False,lt='--',plt=ax[1])
-m = msel*mrelax
-make_plot2(s[m],(cEin_S[m]/cEin_S_E[m]),'seagreen',10,label='Einasto',error=False,lt='--',plt=ax[1])
-
-m = msel
-make_plot2(s[m],(alpha_S[m]/alpha_S_E[m]),'seagreen',10,label='Einasto',error=False,lw=1,plt=ax[2])
-m = msel*mrelax
-make_plot2(s[m],(alpha_S[m]/alpha_S_E[m]),'seagreen',10,label='Einasto',lt='--',error=False,lw=1,plt=ax[2])
-
-m = msel
-make_plot2(s[m],(resNFW_S/resNFW_S_E)[m],'orangered',10,label='Einasto',error=False,lw=1,plt=ax[3])
-make_plot2(s[m],(resNFW_S/resEin_S_E)[m],'seagreen',10,label='Einasto',error=False,lw=1,plt=ax[3])
-m = msel*mrelax
-make_plot2(s[m],(resNFW_S/resNFW_S_E)[m],'orangered',10,label='Einasto',lt='--',error=False,lw=1,plt=ax[3])
-make_plot2(s[m],(resNFW_S/resEin_S_E)[m],'seagreen',10,label='Einasto',lt='--',error=False,lw=1,plt=ax[3])
-
-ax[0].plot([0,1.4],[1,1],'C7',lw=0.5)
-ax[1].plot([0,1.4],[1,1],'C7',lw=0.5)
-ax[2].plot([0,1.4],[1,1],'C7',lw=0.5)
-
-ax[0].set_xlim([0.25,0.6])
-
-ax[2].set_xlabel('$S$')
-ax[1].set_ylabel('$c_{200}/c^E_{200}$')
-ax[0].set_ylabel('$M_{200}/M^E_{200}$')
-ax[2].set_ylabel(r'$\alpha/\alpha^E$')
-f.savefig(plot_path+'spherical_elliptical_2D.pdf',bbox_inches='tight')
-
-
-#################
-# FITTED PARAMETERS
-#################
-#-------------------
-# alpha
-plt.figure(figsize=(4,3))
-m = mfit*mrelax*(lgMEin_rho > 13.5)*(lgMEin_rho > 13.7)
-make_plot2(z[m],alpha_rho[m],nbins=15,lw=2,lt=':',color='C1',label='$13.5 < M_{200} < 13.7$',error=True)
-m = mfit*mrelax*(lgMEin_rho > 14.)*(lgMEin_rho > 14.3)
-make_plot2(z[m],alpha_rho[m],nbins=10,lw=2,lt='--',color='seagreen',label='$14.0 < M_{200} < 14.3$',error=True)
-m = mfit*mrelax*(lgMEin_rho > 14.5)
-make_plot2(z[m],alpha_rho[m],nbins=10,lw=2,lt='-',color='darkgreen',label='$M_{200} > 14.5$',error=True)
-plt.legend(frameon=False)
-plt.xlabel(r'$z$')
-plt.ylabel(r'$\alpha$')
-plt.axis([0.05,1.4,0.15,1])
-plt.savefig(plot_path+'alpha_z.pdf',bbox_inches='tight')
-
-
-plt.figure(figsize=(4,3))
-plt.plot(np.arange(2,4.5,0.2),0.155+0.0095*(np.arange(2,4.5,0.2))**2,'C8',lw=4,label='Gao et al. 2008')
-plt.legend(loc=2,frameon=False)
-m = mfit*mrelax*(lgMEin_rho > 14.5)*(nu < 4.5)
-make_plot2(nu[m],alpha_rho[m],label='Spherical',nbins=6,lw=2,lt='-',color='darkgreen',error=True)
-m = mfit*mrelax*(lgMEin_rho > 13.5)*(lgMEin_rho > 13.7)*(nu < 4.5)
-make_plot2(nu[m],alpha_rho[m],nbins=15,lw=2,lt=':',color='C1',error=True)
-m = mfit*mrelax*(lgMEin_rho > 14.)*(lgMEin_rho > 14.3)*(nu < 4.5)
-make_plot2(nu[m],alpha_rho[m],nbins=10,lw=2,lt='--',color='seagreen',error=True)
-plt.xlabel(r'$\nu$')
-plt.ylabel(r'$\alpha$')
-plt.savefig(plot_path+'alpha_nu.pdf',bbox_inches='tight')
-
-plt.figure(figsize=(4,3))
-m = mfit*mrelax*(lgMEin_rho > 14.5)*(nu < 4.)*(z > 0.9)*(z < 1)*(nu > 2.5)
-make_plot2(nu[m],alpha_rho[m],label='Spherical',nbins=10,lw=1,lt='-',color='seagreen')
-m = mfit*mrelax*(lgMEin_rho_E > 14.5)*(nu < 4)*(z > 0.9)*(z < 1)*(nu > 2.5)
-make_plot2(nu[m],alpha_rho_E[m],label='Elliptical',nbins=10,lw=1,lt='-',color='orangered')
-plt.plot(np.arange(2,4.5,0.2),0.155+0.0095*(np.arange(2,4.5,0.2))**2,'C8',lw=4,label='Gao et al. 2008')
-plt.legend(loc=2,frameon=False)
-# m = mfit*mrelax*(Npart > 1000)*(Npart < 1500)
-m = mfit*mrelax*(lgMEin_rho > 13.5)*(lgMEin_rho > 13.7)*(nu < 4)*(z > 0.9)*(z < 1)*(nu > 2.5)
-make_plot2(nu[m],alpha_rho[m],nbins=15,lw=1,lt=':',color='seagreen')
-m = mfit*mrelax*(lgMEin_rho_E > 13.5)*(lgMEin_rho_E > 13.7)*(nu < 4)*(z > 0.9)*(z < 1)*(nu > 2.5)
-make_plot2(nu[m],alpha_rho_E[m],nbins=15,lw=1,lt=':',color='orangered')
-# m = mfit*mrelax*(Npart > 10000)*(Npart < 11000)
-m = mfit*mrelax*(lgMEin_rho > 14.)*(lgMEin_rho > 14.3)*(nu < 4)*(z > 0.9)*(z < 1)*(nu > 2.5)
-make_plot2(nu[m],alpha_rho[m],nbins=10,lw=1,lt='--',color='seagreen')
-m = mfit*mrelax*(lgMEin_rho_E > 14.)*(lgMEin_rho_E > 14.3)*(nu < 4)*(z > 0.9)*(z < 1)*(nu > 2.5)
-make_plot2(nu[m],alpha_rho_E[m],nbins=10,lw=1,lt='--',color='orangered')
-plt.xlabel(r'$\nu$')
-plt.ylabel(r'$\alpha$')
-plt.savefig(plot_path+'alpha_nu_Hz.pdf',bbox_inches='tight')
-
-
-# plt.figure(figsize=(4,3))
-m = mfit*mrelax*(lgMEin_rho > 14.5)*(nu < 3.2)*(z < 0.2)
-make_plot2(nu[m],alpha_rho[m],label='Spherical',nbins=10,lw=1,lt='-',color='seagreen')
-m = mfit*mrelax*(lgMEin_rho_E > 14.5)*(nu < 3.2)*(z < 0.2)
-make_plot2(nu[m],alpha_rho_E[m],label='Elliptical',nbins=10,lw=1,lt='-',color='orangered')
-plt.plot(np.arange(2,4.5,0.2),0.155+0.0095*(np.arange(2,4.5,0.2))**2,'C8',lw=4,label='Gao et al. 2008')
-plt.legend(loc=2,frameon=False)
-# m = mfit*mrelax*(Npart > 1000)*(Npart < 1500)
-m = mfit*mrelax*(lgMEin_rho > 13.5)*(lgMEin_rho > 13.7)*(nu < 3.2)*(z < 0.2)
-make_plot2(nu[m],alpha_rho[m],nbins=15,lw=1,lt=':',color='seagreen')
-m = mfit*mrelax*(lgMEin_rho_E > 13.5)*(lgMEin_rho_E > 13.7)*(nu < 3.2)*(z < 0.2)
-make_plot2(nu[m],alpha_rho_E[m],nbins=15,lw=1,lt=':',color='orangered')
-# m = mfit*mrelax*(Npart > 10000)*(Npart < 11000)
-m = mfit*mrelax*(lgMEin_rho > 14.)*(lgMEin_rho > 14.3)*(nu < 3.2)*(z < 0.2)
-make_plot2(nu[m],alpha_rho[m],nbins=10,lw=1,lt='--',color='seagreen')
-m = mfit*mrelax*(lgMEin_rho_E > 14.)*(lgMEin_rho_E > 14.3)*(nu < 3.2)*(z < 0.2)
-make_plot2(nu[m],alpha_rho_E[m],nbins=10,lw=1,lt='--',color='orangered')
-plt.xlabel(r'$\nu$')
-plt.ylabel(r'$\alpha$')
-plt.savefig(plot_path+'alpha_nu_Lz.pdf',bbox_inches='tight')
-
-#################
-# CONCENTRATION
-#################
-# concentration with mass and z
-f, ax = plt.subplots(2,2, figsize=(8,6),sharey=True)
-f.subplots_adjust(hspace=0,wspace=0)
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.1)*(z < 0.25)*(lgMNFW_rho > 13.5)*(lgMNFW_rho < 14.8)
-make_plot2(lgMNFW_rho[m],cNFW_rho[m],'orangered',10,label='NFW',error=True,lw=1,plt=ax[0,0])
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.1)*(z < 0.25)*(lgMEin_rho > 13.5)*(lgMNFW_rho < 14.8)
-make_plot2(lgMEin_rho[m],cEin_rho[m],'seagreen',10,label='Einasto',error=True,lw=1,plt=ax[0,0])
-ax[0,0].plot([-1,-1],[-1,-1],'k--',label='relaxed')
-ax[0,0].legend(frameon=False)
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.1)*(z < 0.25)*(lgMNFW_rho > 13.5)*mrelax*(lgMNFW_rho < 14.8)
-make_plot2(lgMNFW_rho[m],cNFW_rho[m],'orangered',10,label='NFW',error=True,lw=1,plt=ax[0,0],lt='--')
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.1)*(z < 0.25)*(lgMEin_rho > 13.5)*mrelax*(lgMNFW_rho < 14.8)
-make_plot2(lgMEin_rho[m],cEin_rho[m],'seagreen',10,label='Einasto',error=True,lw=1,plt=ax[0,0],lt='--')
-
-ax[0,0].set_ylabel(r'$c_{200}$')
-ax[1,0].set_ylabel(r'$c_{200}$')
-ax[0,0].set_xlim([13.43,14.8])
-ax[1,0].set_xlim([13.43,14.8])
-ax[0,0].set_ylim([2.3,5.])
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.9)*(z < 1)*(lgMNFW_rho > 13.5)*(lgMNFW_rho < 14.8)
-make_plot2(lgMNFW_rho[m],cNFW_rho[m],'orangered',10,label='NFW',error=True,lw=1,plt=ax[1,0])
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.9)*(z < 1)*(lgMEin_rho > 13.5)*(lgMNFW_rho < 14.8)
-make_plot2(lgMEin_rho[m],cEin_rho[m],'seagreen',10,label='Einasto',error=True,lw=1,plt=ax[1,0])
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.9)*(z < 1)*(lgMNFW_rho > 13.5)*mrelax*(lgMNFW_rho < 14.8)
-make_plot2(lgMNFW_rho[m],cNFW_rho[m],'orangered',10,label='NFW',error=True,lw=1,plt=ax[1,0],lt='--')
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.9)*(z < 1)*(lgMEin_rho > 13.5)*mrelax*(lgMNFW_rho < 14.8)
-make_plot2(lgMEin_rho[m],cEin_rho[m],'seagreen',10,label='Einasto',error=True,lw=1,plt=ax[1,0],lt='--')
-
-ax[1,0].set_xlabel(r'$\log (M_{200})$')
-
-ax[0,0].text(14.,2.7,'$0.1 < z < 0.25$')
-ax[1,0].text(14.,2.7,'$0.9 < z < 1.0$')
-
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.07)*(z < 1.2)*(lgMNFW_rho > 13.5)*(lgMNFW_rho < 13.7)
-make_plot2(z[m],cNFW_rho[m],'orangered',10,label='NFW',error=True,lw=1,plt=ax[0,1])
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.07)*(z < 1.2)*(lgMEin_rho > 13.5)*(lgMEin_rho < 13.7)
-make_plot2(z[m],cEin_rho[m],'seagreen',10,label='Einasto',error=True,lw=1,plt=ax[0,1])
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.07)*(z < 1.2)*(lgMNFW_rho > 13.5)*(lgMNFW_rho < 13.7)*mrelax
-make_plot2(z[m],cNFW_rho[m],'orangered',10,label='NFW',error=True,lw=1,plt=ax[0,1],lt='--')
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.07)*(z < 1.2)*(lgMEin_rho > 13.5)*(lgMEin_rho < 13.7)*mrelax
-make_plot2(z[m],cEin_rho[m],'seagreen',10,label='Einasto',error=True,lw=1,plt=ax[0,1],lt='--')
-
-ax[0,1].set_xlim([0.07,1.23])
-ax[1,1].set_xlim([0.07,1.23])
-
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.07)*(z < 1.2)*(lgMNFW_rho > 14)*(lgMNFW_rho < 14.3)
-make_plot2(z[m],cNFW_rho[m],'orangered',10,label='NFW',error=True,lw=1,plt=ax[1,1])
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.07)*(z < 1.2)*(lgMEin_rho > 14)*(lgMEin_rho < 14.3)
-make_plot2(z[m],cEin_rho[m],'seagreen',10,label='Einasto',error=True,lw=1,plt=ax[1,1])
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.07)*(z < 1.2)*(lgMNFW_rho > 14)*mrelax*(lgMNFW_rho < 14.3)
-make_plot2(z[m],cNFW_rho[m],'orangered',10,label='NFW',error=True,lw=1,plt=ax[1,1],lt='--')
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.07)*(z < 1.2)*(lgMEin_rho > 14)*mrelax*(lgMEin_rho < 14.3)
-make_plot2(z[m],cEin_rho[m],'seagreen',10,label='Einasto',error=True,lw=1,plt=ax[1,1],lt='--')
-
-
-ax[1,1].set_xlabel(r'$z$')
-
-
-ax[0,1].text(0.2,2.7,'$13.5 < \log(M_{200}) < 13.57$')
-ax[1,1].text(0.2,2.7,'$14.0 < \log(M_{200}) < 14.3$')
-
-f.savefig(plot_path+'concentration.pdf',bbox_inches='tight')
-
-# concentration with shape
-
-f, ax = plt.subplots(2,4, figsize=(12,5),sharey=True)
-f.subplots_adjust(hspace=0,wspace=0)
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.1)*(z < 0.25)*(lgMNFW_rho > 13.5)*(lgMNFW_rho < 13.7)*mrelax
-make_plot2(s[m],cNFW_rho[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[0,0])
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.1)*(z < 0.25)*(lgMEin_rho > 13.5)*(lgMEin_rho < 13.7)*mrelax
-make_plot2(s[m],cEin_rho[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[0,0])
-ax[0,0].legend(loc=4,frameon=False)
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.1)*(z < 0.25)*(lgMNFW_rho > 13.5)*mrelax*(lgMNFW_rho < 13.7)
-make_plot2(sr[m],cNFW_rho[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[0,0],lt='--')
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.1)*(z < 0.25)*(lgMEin_rho > 13.5)*mrelax*(lgMEin_rho < 13.7)
-make_plot2(sr[m],cEin_rho[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[0,0],lt='--')
-
-ax[0,0].set_ylabel(r'$c_{200}$')
-ax[1,0].set_ylabel(r'$c_{200}$')
-
-ax[0,1].plot([-1,-1],[-1,-1],'k-',label='standard')
-ax[0,1].plot([-1,-1],[-1,-1],'k--',label='reduced')
-ax[0,1].legend(loc=4,frameon=False)
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.9)*(z < 1)*(lgMNFW_rho > 13.5)*(lgMNFW_rho < 13.7)*mrelax
-make_plot2(s[m],cNFW_rho[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[1,0])
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.9)*(z < 1)*(lgMEin_rho > 13.5)*(lgMEin_rho < 13.7)*mrelax
-make_plot2(s[m],cEin_rho[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[1,0])
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.9)*(z < 1)*(lgMNFW_rho > 13.5)*mrelax*(lgMNFW_rho < 13.7)
-make_plot2(sr[m],cNFW_rho[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[1,0],lt='--')
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.9)*(z < 1)*(lgMEin_rho > 13.5)*mrelax*(lgMEin_rho < 13.7)
-make_plot2(sr[m],cEin_rho[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[1,0],lt='--')
-
-ax[1,0].set_xlabel(r'$S$')
-
-ax[0,0].text(0.3,5.0,'$13.5 < M_{200} < 13.7$')
-ax[1,0].text(0.3,5.0,'$13.5 < M_{200} < 13.7$')
-ax[0,1].text(0.3,5.0,'$14.0 < M_{200} < 14.3$')
-ax[1,1].text(0.3,5.0,'$14.0 < M_{200} < 14.3$')
-ax[1,0].set_ylim([2,5.5])
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.1)*(z < 0.25)*(lgMNFW_rho > 14.)*(lgMNFW_rho < 14.3)*mrelax
-make_plot2(s[m],cNFW_rho[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[0,1])
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.1)*(z < 0.25)*(lgMEin_rho > 14.)*(lgMEin_rho < 14.3)*mrelax
-make_plot2(s[m],cEin_rho[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[0,1])
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.1)*(z < 0.25)*(lgMNFW_rho > 14)*(lgMNFW_rho < 14.3)*mrelax
-make_plot2(sr[m],cNFW_rho[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[0,1],lt='--')
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.1)*(z < 0.25)*(lgMEin_rho > 14)*(lgMEin_rho < 14.3)*mrelax
-make_plot2(sr[m],cEin_rho[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[0,1],lt='--')
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.9)*(z < 1.)*(lgMNFW_rho > 14)*(lgMNFW_rho < 14.3)*mrelax
-make_plot2(s[m],cNFW_rho[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[1,1])
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.9)*(z < 1.)*(lgMEin_rho > 14)*(lgMEin_rho < 14.3)*mrelax
-make_plot2(s[m],cEin_rho[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[1,1])
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.9)*(z < 1.)*(lgMNFW_rho > 14)*mrelax*(lgMNFW_rho < 14.3)
-make_plot2(sr[m],cNFW_rho[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[1,1],lt='--')
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.9)*(z < 1.)*(lgMEin_rho > 14)*mrelax*(lgMEin_rho < 14.3)
-make_plot2(sr[m],cEin_rho[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[1,1],lt='--')
-
-ax[1,1].set_xlabel(r'$S$')
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.1)*(z < 0.25)*(lgMNFW_rho > 13.5)*(lgMNFW_rho < 13.7)*mrelax
-make_plot2(T[m],cNFW_rho[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[0,2])
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.1)*(z < 0.25)*(lgMEin_rho > 13.5)*(lgMEin_rho < 13.7)*mrelax
-make_plot2(T[m],cEin_rho[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[0,2])
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.1)*(z < 0.25)*(lgMNFW_rho > 13.5)*mrelax*(lgMNFW_rho < 13.7)
-make_plot2(Tr[m],cNFW_rho[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[0,2],lt='--')
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.1)*(z < 0.25)*(lgMEin_rho > 13.5)*mrelax*(lgMEin_rho < 13.7)
-make_plot2(Tr[m],cEin_rho[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[0,2],lt='--')
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.9)*(z < 1)*(lgMNFW_rho > 13.5)*(lgMNFW_rho < 13.7)*mrelax
-make_plot2(T[m],cNFW_rho[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[1,2])
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.9)*(z < 1)*(lgMEin_rho > 13.5)*(lgMEin_rho < 13.7)*mrelax
-make_plot2(T[m],cEin_rho[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[1,2])
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.9)*(z < 1)*(lgMNFW_rho > 13.5)*mrelax*(lgMNFW_rho < 13.7)
-make_plot2(Tr[m],cNFW_rho[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[1,2],lt='--')
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.9)*(z < 1)*(lgMEin_rho > 13.5)*mrelax*(lgMEin_rho < 13.7)
-make_plot2(Tr[m],cEin_rho[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[1,2],lt='--')
-
-ax[1,2].set_xlabel(r'$T$')
-
-ax[0,2].text(0.2,5.0,'$13.5 < M_{200} < 13.7$')
-ax[1,2].text(0.2,5.0,'$13.5 < M_{200} < 13.7$')
-ax[0,3].text(0.2,5.0,'$14.0 < M_{200} < 14.3$')
-ax[1,3].text(0.2,5.0,'$14.0 < M_{200} < 14.3$')
-ax[1,0].set_ylim([2,5.5])
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.1)*(z < 0.25)*(lgMNFW_rho > 14.)*(lgMNFW_rho < 14.3)*mrelax
-make_plot2(T[m],cNFW_rho[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[0,3])
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.1)*(z < 0.25)*(lgMEin_rho > 14.)*(lgMEin_rho < 14.3)*mrelax
-make_plot2(T[m],cEin_rho[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[0,3])
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.1)*(z < 0.25)*(lgMNFW_rho > 14)*(lgMNFW_rho < 14.3)*mrelax
-make_plot2(Tr[m],cNFW_rho[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[0,3],lt='--')
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.1)*(z < 0.25)*(lgMEin_rho > 14)*(lgMEin_rho < 14.3)*mrelax
-make_plot2(Tr[m],cEin_rho[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[0,3],lt='--')
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.9)*(z < 1.)*(lgMNFW_rho > 14)*(lgMNFW_rho < 14.3)*mrelax
-make_plot2(T[m],cNFW_rho[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[1,3])
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.9)*(z < 1.)*(lgMEin_rho > 14)*(lgMEin_rho < 14.3)*mrelax
-make_plot2(T[m],cEin_rho[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[1,3])
-
-m = mfit*(cNFW_rho > 0)*(cNFW_rho < 10)*(z > 0.9)*(z < 1.)*(lgMNFW_rho > 14)*mrelax*(lgMNFW_rho < 14.3)
-make_plot2(Tr[m],cNFW_rho[m],'orangered',8,label='NFW',error=True,lw=1,plt=ax[1,3],lt='--')
-m = mfit*(cEin_rho> 0)*(cEin_rho < 10)*(z > 0.9)*(z < 1.)*(lgMEin_rho > 14)*mrelax*(lgMEin_rho < 14.3)
-make_plot2(Tr[m],cEin_rho[m],'seagreen',8,label='Einasto',error=True,lw=1,plt=ax[1,3],lt='--')
-
-ax[1,3].set_xlabel(r'$T$')
-
-ax[0,0].set_xlim([0.2,0.9])
-ax[1,0].set_xlim([0.2,0.9])
-ax[0,1].set_xlim([0.2,0.9])
-ax[1,1].set_xlim([0.2,0.9])
-
-ax[0,2].set_xlim([0.05,0.98])
-ax[1,2].set_xlim([0.05,0.98])
-ax[0,3].set_xlim([0.05,0.98])
-ax[1,3].set_xlim([0.05,0.98])
-
-
-f.savefig(plot_path+'concentration_shape.pdf',bbox_inches='tight')
-
-
-###############
-# 2D vs 3D
-###############
-f, ax = plt.subplots(3,1, figsize=(4,7.5),sharex=True)
-f.subplots_adjust(hspace=0,wspace=0)
-msel = mfit#*(s>0.3)*(Npart > 1000)*(Npart < 5000)*(z > 0.9)*(z < 1.)
-m = msel
-make_plot2(sr[m],10**(lgMNFW_rho-lgMNFW_S)[m],'orangered',10,label='NFW',error=False,lw=1,plt=ax[0])
-make_plot2(sr[m],10**(lgMEin_rho-lgMEin_S)[m],'seagreen',10,label='Einasto',error=False,lw=1,plt=ax[0])
-ax[0].legend(frameon=False)
-
-m = msel*mrelax
-make_plot2(sr[m],10**(lgMNFW_rho-lgMNFW_S)[m],'orangered',10,label='NFW',error=False,lt='--',plt=ax[0])
-make_plot2(sr[m],10**(lgMEin_rho-lgMEin_S)[m],'seagreen',10,label='Einasto',error=False,lt='--',plt=ax[0])
-
-m = msel
-make_plot2(sr[m],(cNFW_rho[m]/cNFW_S[m]),'orangered',10,label='NFW',error=False,lw=1,plt=ax[1])
-make_plot2(sr[m],(cEin_rho[m]/cEin_S[m]),'seagreen',10,label='Einasto',error=False,lw=1,plt=ax[1])
-m = msel*mrelax
-make_plot2(sr[m],(cNFW_rho[m]/cNFW_S[m]),'orangered',10,label='NFW',error=False,lt='--',plt=ax[1])
-make_plot2(sr[m],(cEin_rho[m]/cEin_S[m]),'seagreen',10,label='Einasto',error=False,lt='--',plt=ax[1])
-
-
-m = msel
-make_plot2(sr[m],(alpha_rho[m]/alpha_S[m]),'seagreen',10,label='Einasto',error=False,lw=1,plt=ax[2])
-m = msel*mrelax
-make_plot2(sr[m],(alpha_rho[m]/alpha_S[m]),'seagreen',10,label='Einasto',lt='--',error=False,lw=1,plt=ax[2])
-
-ax[0].plot([0,1.4],[1,1],'C7',lw=0.5)
-ax[1].plot([0,1.4],[1,1],'C7',lw=0.5)
-ax[2].plot([0,1.4],[1,1],'C7',lw=0.5)
-
-ax[0].set_xlim([0.29,1])
-
-ax[2].set_xlabel('$S$')
-ax[1].set_ylabel('$c_{200}/c^E_{200}$')
-ax[0].set_ylabel('$M_{200}/M^E_{200}$')
-ax[2].set_ylabel(r'$\alpha/\alpha^E$')
-f.savefig(plot_path+'3D2D_params.pdf',bbox_inches='tight')
-
+def plt_fig9(samp,msel,clab):
+
+        
+    m = msel*mrelax
+    # make_plot2(s[m],(resNFW_rho/resNFW_rho_E)[m],clab,7,label=samp,error=False,lw=1,plt=ax[0,0],lt='-')
+    make_plot2(s[m],(resEin_rho/resEin_rho_E)[m],clab,7,label='Einasto',error=False,lw=1,plt=ax[0,0],lt='--')
+    # make_plot2(q2d[m],(resNFW_S/resNFW_S_E)[m],clab,7,label='Einasto',error=False,plt=ax[0,1],lt='-')
+    make_plot2(q2d[m],(resEin_S/resEin_S_E)[m],clab,7,label='Einasto',error=False,plt=ax[0,1],lt='--')
+        
+    m = msel*mrelax
+    # make_plot2(s[m],10**(lgMNFW_rho-lgMNFW_rho_E)[m],clab,7,label='NFW',error=False,lw=1,plt=ax[1,0],lt='-')
+    make_plot2(s[m],10**(lgMEin_rho-lgMEin_rho_E)[m],clab,7,label='Einasto',error=False,plt=ax[1,0],lt='--')
+    # make_plot2(q2d[m],10**(lgMNFW_S-lgMNFW_S_E)[m],clab,7,label='NFW',error=False,plt=ax[1,1],lt='-')
+    make_plot2(q2d[m],10**(lgMEin_S-lgMEin_S_E)[m],clab,7,label='Einasto',error=False,plt=ax[1,1],lt='--')
+        
+    m = msel*mrelax
+    # make_plot2(s[m],(cNFW_rho[m]/cNFW_rho_E[m]),clab,7,label='NFW',error=False,lw=1,plt=ax[2,0],lt='-')
+    make_plot2(s[m],(cEin_rho[m]/cEin_rho_E[m]),clab,7,label='Einasto',error=False,lw=1,plt=ax[2,0],lt='--')
+    # make_plot2(q2d[m],(cNFW_S[m]/cNFW_S_E[m]),clab,7,label='NFW',error=False,plt=ax[2,1],lt='-')
+    make_plot2(q2d[m],(cEin_S[m]/cEin_S_E[m]),clab,7,label='Einasto',error=False,plt=ax[2,1],lt='--')
+        
+    m = msel*mrelax
+    make_plot2(s[m],(alpha_rho[m]/alpha_rho_E[m]),clab,7,label='Einasto',error=False,lw=1,plt=ax[3,0],lt='--')
+    make_plot2(q2d[m],(alpha_S[m]/alpha_S_E[m]),clab,7,label='Einasto',plt=ax[3,1],lt='--')
+    
+    ax[0,0].text(0.3,1.2,'3D')
+    ax[0,1].text(0.4,1.2,'2D')
+    
+    ax[0,0].set_ylim([0.35,1.3])
+    ax[0,1].set_ylim([0.35,1.3])
+    ax[1,0].set_ylim([0.78,1.05])
+    ax[1,1].set_ylim([0.78,1.05])
+    ax[2,0].set_ylim([0.8,1.35])
+    ax[2,1].set_ylim([0.8,1.35])
+    ax[3,0].set_ylim([0.45,1.3])
+    ax[3,1].set_ylim([0.45,1.3])
+    
+    for j in range(4):
+        ax[j,0].plot([0,1.4],[1,1],'C7',lw=0.5)
+        ax[j,1].plot([0,1.4],[1,1],'C7',lw=0.5)
+        ax[j,1].set_yticklabels([])
+        ax[j,0].set_xlim([0.25,0.95])
+        ax[j,1].set_xlim([0.25,0.95])
+    
+    ax[3,0].set_xlabel('$S$')
+    ax[3,1].set_xlabel('$q$')
+    ax[0,0].set_ylabel('$\delta/\delta^E$')
+    ax[1,0].set_ylabel('$M_{200}/M^E_{200}$')
+    ax[2,0].set_ylabel('$c_{200}/c^E_{200}$')
+    ax[3,0].set_ylabel(r'$\alpha/\alpha^E$')
+    # f.savefig(plot_path+'spherical_elliptical'+samp+'.png',bbox_inches='tight')
+
+msel = mfit*(s<1.)*(s>0.25)*(lgM>14)#*(lgM<14.)#*mres2
+
+# plt_fig9('',msel)
+
+plt_fig9('_z_00_02',msel*(z < 0.2),'C0')
+plt_fig9('_z_02_03',msel*(z > 0.2)*(z < 0.3),'C1')
+plt_fig9('_z_03_04',msel*(z > 0.3)*(z < 0.4),'C2')
+plt_fig9('_z_04_05',msel*(z > 0.4)*(z < 0.5),'C3')
+plt_fig9('_z_05_12',msel*(z > 0.5),'C4')
+
+'''
 ##########################
-###############
-# 2D vs 3D
-###############
-f, ax = plt.subplots(3,1, figsize=(4,7.5),sharex=True)
-f.subplots_adjust(hspace=0,wspace=0)
-msel = mfit#*(s>0.3)*(Npart > 1000)*(Npart < 5000)*(z > 0.9)*(z < 1.)
-m = msel
-make_plot2(resNFW_S[m],10**(lgMNFW_rho-lgMNFW_S)[m],'orangered',10,label='NFW',error=False,lw=1,plt=ax[0])
-make_plot2(resEin_S[m],10**(lgMEin_rho-lgMEin_S)[m],'seagreen',10,label='Einasto',error=False,lw=1,plt=ax[0])
-ax[0].legend(frameon=False)
 
-m = msel*mrelax
-make_plot2(sr[m],10**(lgMNFW_rho-lgMNFW_S)[m],'orangered',10,label='NFW',error=False,lt='--',plt=ax[0])
-make_plot2(sr[m],10**(lgMEin_rho-lgMEin_S)[m],'seagreen',10,label='Einasto',error=False,lt='--',plt=ax[0])
+prev = pd.read_csv('../halo_props_1_1.csv.bz2')
+new = pd.read_csv('../MICEv2.0/catalogs/halo_props2_1_1_main.csv.bz2')
 
-m = msel
-make_plot2(sr[m],(cNFW_rho[m]/cNFW_S[m]),'orangered',10,label='NFW',error=False,lw=1,plt=ax[1])
-make_plot2(sr[m],(cEin_rho[m]/cEin_S[m]),'seagreen',10,label='Einasto',error=False,lw=1,plt=ax[1])
-m = msel*mrelax
-make_plot2(sr[m],(cNFW_rho[m]/cNFW_S[m]),'orangered',10,label='NFW',error=False,lt='--',plt=ax[1])
-make_plot2(sr[m],(cEin_rho[m]/cEin_S[m]),'seagreen',10,label='Einasto',error=False,lt='--',plt=ax[1])
+index = np.arange(len(prev))
+m = np.random.choice(index[prev.Npart > 100],size=10000)
+
+offset = np.array(np.sqrt((new.xc - new.xc_rc)**2 + (new.yc - new.yc_rc)**2 + (new.zc - new.zc_rc)**2))/new.r_max
+
+s3Dr = new.c3Dr/new.a3Dr
+s3D  = new.c3D/new.a3D
+q3Dr = new.b3Dr/new.a3Dr
+q3D  = new.b3D/new.a3D
+
+q2Dr = new.b2Dr/new.a2Dr
+q2D  = new.b2D/new.a2D
+
+T = (1 - q3D**2)/(1 - s3D**2)
+Tr = (1 - q3Dr**2)/(1 - s3Dr**2)
+
+T_prev = (1 - prev.q3D**2)/(1 - prev.s3D**2)
+Tr_prev = (1 - prev.q3Dr**2)/(1 - prev.s3Dr**2)
 
 
-m = msel
-make_plot2(sr[m],(alpha_rho[m]/alpha_S[m]),'seagreen',10,label='Einasto',error=False,lw=1,plt=ax[2])
-m = msel*mrelax
-make_plot2(sr[m],(alpha_rho[m]/alpha_S[m]),'seagreen',10,label='Einasto',lt='--',error=False,lw=1,plt=ax[2])
 
-ax[0].plot([0,1.4],[1,1],'C7',lw=0.5)
-ax[1].plot([0,1.4],[1,1],'C7',lw=0.5)
-ax[2].plot([0,1.4],[1,1],'C7',lw=0.5)
+# xedges = np.linspace(0.3,0.8,50)
+# yedges = np.linspace(0.3,0.8,50)
 
-ax[0].set_xlim([0.29,1])
+# xcenters = (xedges[:-1] + xedges[1:]) / 2.
+# ycenters = (yedges[:-1] + yedges[1:]) / 2.
 
-ax[2].set_xlabel('$S$')
-ax[1].set_ylabel('$c_{200}/c^E_{200}$')
-ax[0].set_ylabel('$M_{200}/M^E_{200}$')
-ax[2].set_ylabel(r'$\alpha/\alpha^E$')
-f.savefig(plot_path+'3D2D_params.pdf',bbox_inches='tight')
+# X,Y = np.meshgrid(xcenters,ycenters)
 
-##########################
+# H, xedges, yedges = np.histogram2d(s3Dr,prev.s3Dr, bins=(xedges, yedges))
+# plt.contour(X, Y, H.T,cmap='Reds')
+
+f, ax = plt.subplots(3,2, figsize=(6,10), sharex=True, sharey=True)
+# f.subplots_adjust(hspace=0,wspace=0)
+
+ax = ax.T
+
+ax[0,0].hexbin(s3D[m],prev.s3D[m],gridsize=150,vmin=0,vmax=5,cmap='YlGn')
+ax[1,0].hexbin(s3Dr[m],prev.s3Dr[m],gridsize=150,vmin=0,vmax=5,cmap='PuRd')
+
+ax[0,1].hexbin(T[m],T_prev[m],gridsize=150,vmin=0,vmax=5,cmap='YlGn')
+ax[1,1].hexbin(Tr[m],Tr_prev[m],gridsize=150,vmin=0,vmax=5,cmap='PuRd')
+
+ax[0,2].hexbin(q2D[m],prev.q2D[m],gridsize=150,vmin=0,vmax=5,cmap='YlGn')
+ax[1,2].hexbin(q2Dr[m],prev.q2Dr[m],gridsize=150,vmin=0,vmax=5,cmap='PuRd')
+
+ax[0,0].set_xlabel('$S$')
+ax[0,0].set_ylabel('$S^{off}$')
+        
+ax[1,0].set_xlabel('$S_r$')
+ax[1,0].set_ylabel('$S^{off}_r$')
+        
+ax[0,1].set_xlabel('$T$')
+ax[0,1].set_ylabel('$T^{off}$')
+        
+ax[1,1].set_xlabel('$T_r$')
+ax[1,1].set_ylabel('$T^{off}_r$')
+        
+ax[0,2].set_xlabel('$q$')
+ax[0,2].set_ylabel('$q^{off}$')
+        
+ax[1,2].set_xlabel('$q_r$')
+ax[1,2].set_ylabel('$q^{off}_r$')
+
+for j in range(2):
+    for i in range(3):
+        ax[j,i].plot([0,1],[0,1],'C7--')
+
+######################
+f, ax = plt.subplots(3,2, figsize=(6,10), sharex=True, sharey=True)
+# f.subplots_adjust(hspace=0,wspace=0)
+f2,ax2 = plt.subplots()
+
+im0 = ax2.scatter(s3D[m],prev.s3D[m],c=offset[m],cmap='cividis',s=1,vmax=0.3,vmin=0.)
+
+ax = ax.T
+
+ax[0,0].scatter(s3D[m],prev.s3D[m]/s3D[m],c=offset[m],cmap='cividis', alpha=0.3,s=1,vmax=0.3,vmin=0.)
+ax[1,0].scatter(s3Dr[m],prev.s3Dr[m]/s3Dr[m],c=offset[m],cmap='cividis', alpha=0.3,s=1,vmax=0.3,vmin=0.)
+        
+ax[0,1].scatter(T[m],T_prev[m]/T[m],c=offset[m],cmap='cividis', alpha=0.3,s=1,vmax=0.3,vmin=0.)
+ax[1,1].scatter(Tr[m],Tr_prev[m]/Tr[m],c=offset[m],cmap='cividis', alpha=0.3,s=1,vmax=0.3,vmin=0.)
+        
+ax[0,2].scatter(q2D[m],prev.q2D[m]/q2D[m],c=offset[m],cmap='cividis', alpha=0.3,s=1,vmax=0.3,vmin=0.)
+ax[1,2].scatter(q2Dr[m],prev.q2Dr[m]/q2Dr[m],c=offset[m],cmap='cividis', alpha=0.3,s=1,vmax=0.3,vmin=0.)
+
+ax[0,0].set_xlabel('$S^{SS}$')
+ax[0,0].set_ylabel('$S^{CM}/S^{SS}$')
+        
+ax[1,0].set_xlabel('$S^{SS}_r$')
+ax[1,0].set_ylabel('$S^{CM}_r/S^{SS}_r$')
+        
+ax[0,1].set_xlabel('$T^{SS}$')
+ax[0,1].set_ylabel('$T^{CM}/T^{SS}$')
+        
+ax[1,1].set_xlabel('$T^{SS}_r$')
+ax[1,1].set_ylabel('$T^{CM}_r/T^{SS}_r$')
+        
+ax[0,2].set_xlabel('$q^{SS}$')
+ax[0,2].set_ylabel('$q^{CM}/q^{SS}$')
+        
+ax[1,2].set_xlabel('$q^{SS}_r$')
+ax[1,2].set_ylabel('$q^{CM}_r/q^{SS}_r$')
+
+for j in range(2):
+    for i in range(3):
+        ax[j,i].plot([0,1],[1,1],'C7--')
+
+ax[0,2].set_ylim([0.3,1.7])
+
+f.colorbar(im0, ax=ax, orientation='horizontal', fraction=.05,alpha=1,label = '$r_c/r_{MAX}$',pad=0.1)
+f.savefig(plot_path+'shape_offset.pdf',bbox_inches='tight')
+'''

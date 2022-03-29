@@ -14,7 +14,7 @@ cosmo = cosmology.setCosmology('MICE')
 # plot_path = '/home/elizabeth/plot_paper_HSMice'
 plot_path = '/home/eli/Documentos/Astronomia/proyectos/HALO-SHAPE/MICE/plot_paper_HSMice/'
 
-params = np.loadtxt('/home/eli/Documentos/Astronomia/proyectos/HALO-SHAPE/MICE/HALO_Props_MICE_old.cat').T
+params = np.loadtxt('/home/eli/Documentos/Astronomia/proyectos/HALO-SHAPE/MICE/HALO_Props_MICE.cat').T
 
 z            = params[9]
 lgMDelta     = params[180]
@@ -64,4 +64,4 @@ for j in range(len(z)):
     Cvir = np.append(Cvir,cvir)
     Rvir = np.append(Rvir,rvir)
 
-np.savetxt('/home/eli/Documentos/Astronomia/proyectos/HALO-SHAPE/MICE/HALO_Props_vir_old.cat',[np.log10(Mvir),Rvir,Cvir],fmt='%12.6f')
+np.savetxt('/home/eli/Documentos/Astronomia/proyectos/HALO-SHAPE/MICE/HALO_Props_vir.cat',[np.log10(Mvir),Rvir,Cvir],fmt='%12.6f')

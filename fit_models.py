@@ -14,7 +14,7 @@ class Sigma_fit:
 	# R en Mpc, Sigma M_Sun/Mpc2
 	
 
-    def __init__(self,R,Sigma,err,z,model='NFW',Min=1.e13,cin=3.):
+    def __init__(self,R,Sigma,err,z,model='NFW',Min=1.e13,cin=3.,fit_alpha=True):
 
         Min = np.max([1.e11,Min])
         Min = np.min([1.e15,Min])
@@ -34,12 +34,12 @@ class Sigma_fit:
             
 
         try:
-        
-            out = p.fit(R*1000., Sigma/(1.e3**2), 'Sigma', q_err = err/(1.e3**2), tolerance = 1.e-04,verbose=False)
             
             BIN= len(Sigma)
             
             if model == 'NFW':
+                
+                out = p.fit(R*1000., Sigma/(1.e3**2), 'Sigma', q_err = err/(1.e3**2), tolerance = 1.e-04,verbose=False)
                 
                 rhos,rs = out['x']
                 prof = profile_nfw.NFWProfile(rhos = rhos, rs = rs)
@@ -48,7 +48,15 @@ class Sigma_fit:
                 
             elif model == 'Einasto':
                 
-                rhos,rs,alpha = out['x']
+                if fit_alpha:
+                    out = p.fit(R*1000., Sigma/(1.e3**2), 'Sigma', q_err = err/(1.e3**2), tolerance = 1.e-04,verbose=False)
+                    rhos,rs,alpha = out['x']
+                else:
+                    out = p.fit(R*1000., Sigma/(1.e3**2), 'Sigma', q_err = err/(1.e3**2), tolerance = 1.e-04,verbose=False,mask=[True,True,False])
+                    rhos,rs = out['x']
+                    alpha = p.par['alpha']
+                
+                
                 prof = profile_einasto.EinastoProfile(rhos = rhos, rs = rs, alpha = alpha)
                 Ndoff = float(BIN - 3)
             
@@ -81,7 +89,7 @@ class rho_fit:
 	# R en Mpc, rho M_Sun/Mpc3
 	
 
-    def __init__(self,R,rho,err,z,model='NFW',Min=1.e13,cin=3.):
+    def __init__(self,R,rho,err,z,model='NFW',Min=1.e13,cin=3.,fit_alpha=True):
 
         Min = np.max([1.e11,Min])
         Min = np.min([1.e15,Min])
@@ -102,11 +110,11 @@ class rho_fit:
 
         try:
         
-            out = p.fit(R*1000., rho/(1.e3**3), 'rho', q_err = err/(1.e3**3), tolerance = 1.e-04,verbose=False)
-            
             BIN= len(rho)
             
             if model == 'NFW':
+                
+                out = p.fit(R*1000., rho/(1.e3**3), 'rho', q_err = err/(1.e3**3), tolerance = 1.e-04,verbose=False)
                 
                 rhos,rs = out['x']
                 prof = profile_nfw.NFWProfile(rhos = rhos, rs = rs)
@@ -115,7 +123,15 @@ class rho_fit:
                 
             elif model == 'Einasto':
                 
-                rhos,rs,alpha = out['x']
+                
+                if fit_alpha:
+                    out = p.fit(R*1000., rho/(1.e3**3), 'rho', q_err = err/(1.e3**3), tolerance = 1.e-04,verbose=False)
+                    rhos,rs,alpha = out['x']
+                else:
+                    out = p.fit(R*1000., rho/(1.e3**3), 'rho', q_err = err/(1.e3**3), tolerance = 1.e-04,verbose=False,mask=[True,True,False])
+                    rhos,rs = out['x']
+                    alpha = p.par['alpha']
+                    
                 prof = profile_einasto.EinastoProfile(rhos = rhos, rs = rs, alpha = alpha)
                 Ndoff = float(BIN - 3)
             
