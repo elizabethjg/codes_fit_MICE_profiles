@@ -372,7 +372,8 @@ f2,ax2 = plt.subplots()
 im0 = ax2.scatter(s3D[m],prev.s3D[m],c=offset[m],cmap='cividis',s=1,vmax=0.3,vmin=0.)
 
 ax = ax.T
-
+ax[0,0].set_title('standard')
+ax[1,0].set_title('reduced')
 ax[0,0].scatter(s3D[m],prev.s3D[m]/s3D[m],c=offset[m],cmap='cividis', alpha=0.3,s=1,vmax=0.3,vmin=0.)
 ax[1,0].scatter(s3Dr[m],prev.s3Dr[m]/s3Dr[m],c=offset[m],cmap='cividis', alpha=0.3,s=1,vmax=0.3,vmin=0.)
         
@@ -382,23 +383,23 @@ ax[1,1].scatter(Tr[m],Tr_prev[m]/Tr[m],c=offset[m],cmap='cividis', alpha=0.3,s=1
 ax[0,2].scatter(q2D[m],prev.q2D[m]/q2D[m],c=offset[m],cmap='cividis', alpha=0.3,s=1,vmax=0.3,vmin=0.)
 ax[1,2].scatter(q2Dr[m],prev.q2Dr[m]/q2Dr[m],c=offset[m],cmap='cividis', alpha=0.3,s=1,vmax=0.3,vmin=0.)
 
-ax[0,0].set_xlabel('$S^{SS}$')
-ax[0,0].set_ylabel('$S^{CM}/S^{SS}$')
+ax[0,0].set_xlabel('$S^{SSC}$')
+ax[0,0].set_ylabel('$S^{CM}/S^{SSC}$')
         
-ax[1,0].set_xlabel('$S^{SS}_r$')
-ax[1,0].set_ylabel('$S^{CM}_r/S^{SS}_r$')
+ax[1,0].set_xlabel('$S^{SSC}_r$')
+ax[1,0].set_ylabel('$S^{CM}_r/S^{SSC}_r$')
         
-ax[0,1].set_xlabel('$T^{SS}$')
-ax[0,1].set_ylabel('$T^{CM}/T^{SS}$')
+ax[0,1].set_xlabel('$T^{SSC}$')
+ax[0,1].set_ylabel('$T^{CM}/T^{SSC}$')
         
-ax[1,1].set_xlabel('$T^{SS}_r$')
-ax[1,1].set_ylabel('$T^{CM}_r/T^{SS}_r$')
+ax[1,1].set_xlabel('$T^{SSC}_r$')
+ax[1,1].set_ylabel('$T^{CM}_r/T^{SSC}_r$')
         
-ax[0,2].set_xlabel('$q^{SS}$')
-ax[0,2].set_ylabel('$q^{CM}/q^{SS}$')
+ax[0,2].set_xlabel('$q^{SSC}$')
+ax[0,2].set_ylabel('$q^{CM}/q^{SSC}$')
         
-ax[1,2].set_xlabel('$q^{SS}_r$')
-ax[1,2].set_ylabel('$q^{CM}_r/q^{SS}_r$')
+ax[1,2].set_xlabel('$q^{SSC}_r$')
+ax[1,2].set_ylabel('$q^{CM}_r/q^{SSC}_r$')
 
 for j in range(2):
     for i in range(3):
@@ -407,5 +408,5 @@ for j in range(2):
 ax[0,2].set_ylim([0.3,1.7])
 
 f.colorbar(im0, ax=ax, orientation='horizontal', fraction=.05,alpha=1,label = '$r_c/r_{MAX}$',pad=0.1)
-f.savefig(plot_path+'shape_offset.pdf',bbox_inches='tight')
+f.savefig(plot_path+'shape_offset.png',bbox_inches='tight')
 '''

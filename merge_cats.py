@@ -1,6 +1,6 @@
 import sys
 import numpy as np
-
+from astropy.io import fits
 path = '/home/elizabeth/halo_props2/lightconedir_129/'
 # path = '/home/eli/Documentos/Astronomia/proyectos/HALO-SHAPE/MICE/MICEv2.0/catalogs/raro/'
 join = np.ones((1,214))
@@ -31,11 +31,107 @@ join = join[1:,:]
 
 np.savetxt('/home/elizabeth/HALO_Props_MICE.cat',join,fmt='%12.6f')
 
+params = join.T
+params = np.loadtxt('/home/elizabeth/HALO_Props_MICE.cat').T
 
-ra = np.rad2deg(np.arctan(mch.xgal/mch.ygal))
-ra[mch.ygal==0] = 90.
-dec = np.rad2deg(np.arcsin(mch.zgal/sqrt(mch.xgal**2 + mch.ygal**2 + mch.zgal**2)))
+halo_id = params[0]
+Npart   = params[1]
+lgM     = params[2]
+xc      = params[3]
+yc      = params[4]
+zc      = params[5]
+xc_rc   = params[6]
+yc_rc   = params[7]
+zc_rc   = params[8]
+z       = params[9]
+r_max   = params[10]
+vxc     = params[11]
+vyc     = params[12]
+vzc     = params[13]
+Jx      = params[14]
+Jy      = params[15]
+Jz      = params[16]
+K       = params[17]
+U       = params[18]
+a2D     = params[19]
+b2D     = params[20]
+a2Dx    = params[21]
+a2Dy    = params[22]
+b2Dx    = params[23]
+b2Dy    = params[24]
+a2Dr    = params[25]
+b2Dr    = params[26]
+a2Drx   = params[27]
+a2Dry   = params[28]
+b2Drx   = params[29]
+b2Dry   = params[30]
+a3D     = params[31]
+b3D     = params[32]
+c3D     = params[33]
+a3Dx    = params[34]
+a3Dy    = params[35]
+a3Dz    = params[36]
+b3Dx    = params[37]
+b3Dy    = params[38]
+b3Dz    = params[39]
+c3Dx    = params[40]
+c3Dy    = params[41]
+c3Dz    = params[42]
+a3Dr    = params[43]
+b3Dr    = params[44]
+c3Dr    = params[45]
+a3Drx   = params[46]
+a3Dry   = params[47]
+a3Drz   = params[48]
+b3Drx   = params[49]
+b3Dry   = params[50]
+b3Drz   = params[51]
+c3Drx   = params[52]
+c3Dry   = params[53]
+c3Drz   = params[54]
+R       = params[55:80]/1.e3
+rho     = params[80:105]
+rhoE    = params[105:130]
+S       = params[130:155]
+SE      = params[155:180]
+lgMDelta     = params[180]
+Delta        = params[181]
+lgMNFW_rho   = params[182]
+cNFW_rho     = params[183]
+resNFW_rho   = params[184]
+nb_rho       = params[185]
+lgMNFW_rho_E = params[186]
+cNFW_rho_E   = params[187]
+resNFW_rho_E = params[188]
+nb_rho_E     = params[189]
+lgMNFW_S     = params[190]
+cNFW_S       = params[191]
+resNFW_S     = params[192]
+nb_S         = params[193]
+lgMNFW_S_E   = params[194]
+cNFW_S_E     = params[195]
+resNFW_S_E   = params[196]
+nb_S_E       = params[197]
+lgMEin_rho   = params[198]
+cEin_rho     = params[199]
+alpha_rho    = params[200]
+resEin_rho   = params[201]
+lgMEin_rho_E = params[202]
+cEin_rho_E   = params[203]
+alpha_rho_E  = params[204]
+resEin_rho_E = params[205]
+lgMEin_S     = params[206]
+cEin_S       = params[207]
+alpha_S      = params[208]
+resEin_S     = params[209]
+lgMEin_S_E   = params[210]
+cEin_S_E     = params[211]
+alpha_S_E    = params[212]
+resEin_S_E   = params[213]
 
+
+rc = np.array(np.sqrt((xc - xc_rc)**2 + (yc - yc_rc)**2 + (zc - zc_rc)**2))
+offset = rc/r_max
 
 ra_rc = np.rad2deg(np.arctan(xc_rc/yc_rc))
 ra_rc[yc_rc==0] = 90.
@@ -145,10 +241,10 @@ table = [fits.Column(name='halo_id',format='E',array= halo_id),
         fits.Column(name='lgMEin_S_E',format='E',array= lgMEin_S_E  ),
         fits.Column(name='cEin_S_E',format='E',array= cEin_S_E    ),
         fits.Column(name='alpha_S_E',format='E',array= alpha_S_E   ),
-        fits.Column(name='resEin_S_E',format='E',array= resEin_S_E  ),
-        fits.Column(name='lgMvir',format='E',array= lgMvir),
-        fits.Column(name='Rvir',format='E',array= Rvir),
-        fits.Column(name='Cvir',format='E',array= Cvir),]
+        fits.Column(name='resEin_S_E',format='E',array= resEin_S_E  )]
+        # fits.Column(name='lgMvir',format='E',array= lgMvir),
+        # fits.Column(name='Rvir',format='E',array= Rvir),
+        # fits.Column(name='Cvir',format='E',array= Cvir),]
 
 tbhdu = fits.BinTableHDU.from_columns(fits.ColDefs(table))
 
