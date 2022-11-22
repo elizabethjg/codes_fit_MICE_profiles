@@ -4,7 +4,7 @@ from astropy.io import fits
 sys.path.append('/home/elizabeth/lens_codes_v3.7')
 from fit_models import *
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-
+from models_profiles import *
 
 # main = pd.read_csv('/home/eli/Documentos/Astronomia/proyectos/HALO-SHAPE/MICE/MICEv1.0/catalogs/halo_props2_8_5_pru_main.csv.bz2')
 # profiles = np.loadtxt('/home/eli/Documentos/Astronomia/proyectos/HALO-SHAPE/MICE/MICEv1.0/catalogs/halo_props2_8_5_pru_pro.csv.bz2',skiprows=1,delimiter=',')
@@ -13,6 +13,9 @@ main = fits.open('../halo_subset_filt.fits')[1].data
 lmap  = fits.open('/home/elizabeth/maps/map_halo_subset.fits')[1].data
 lmap2 = fits.open('/home/elizabeth/maps/map_halo_subset_lr.fits')[1].data
 pro   = fits.open('/home/elizabeth/profiles/profile_halo_subset.fits')[1].data
+zmean  = fits.open('/home/elizabeth/profiles/profile_halo_subset.fits')[0].header['Z_MEAN']
+fit_NFW = fits.open('/home/elizabeth/profiles/fitresults_2h_2q_350_5000_profile_halo_subset.fits')[0].header
+fit_Ein = fits.open('/home/elizabeth/profiles/fitresults_2h_2q_Ein_350_5000_profile_halo_subset.fits')[0].header
 
 mlmap = (np.abs(lmap.xmpc) < 6.) & (np.abs(lmap.ympc) < 6.)
 mlmap2 = (np.abs(lmap2.xmpc) < 6.) & (np.abs(lmap2.ympc) < 6.)
@@ -173,6 +176,12 @@ Sf_E2      = Sigma_fit(rp[mr2],Sp[mr2]/nhalos,mpA[mr2]/nhalos,z,'Einasto',rhof2.
 # rhof_E2a    = rho_fit(rp[mr2],rhop[mr2]/nhalos,mpV[mr2]/nhalos,z,'Einasto',rhof2.M200,rhof2.c200,False)
 # Sf_E2a      = Sigma_fit(rp[mr2],Sp[mr2]/nhalos,mpA[mr2]/nhalos,z,'Einasto',rhof2.M200,rhof2.c200,False)
 
+DS_NFW_2h   = Delta_Sigma_NFW_2h_parallel(pro.Rp,zmean,M200 = 10**fit_NFW['lM200'],c200=fit_NFW['c200'],cosmo_params=params,terms='2h',ncores=30)
+DS_NFW_1h   = Delta_Sigma_NFW_2h_parallel(pro.Rp,zmean,M200 = 10**fit_NFW['lM200'],c200=fit_NFW['c200'],cosmo_params=params,terms='1h',ncores=30)
+DS_Ein_2h   = Delta_Sigma_Ein_2h_parallel(pro.Rp,zmean,M200 = 10**fit_Ein['lM200'],c200=fit_Ein['c200'],cosmo_params=params,terms='2h',ncores=30,alpha=fit_Ein['alpha'])
+DS_Ein_1h   = Delta_Sigma_Ein_2h_parallel(pro.Rp,zmean,M200 = 10**fit_Ein['lM200'],c200=fit_Ein['c200'],cosmo_params=params,terms='1h',ncores=30,alpha=fit_Ein['alpha'])
+
+
 Xp = Xp*1.e-3
 Yp = Yp*1.e-3
 X  = X*1.e-3
@@ -249,11 +258,20 @@ ax[0].set_ylabel('$y [Mpc/h]$')
 
 
 ax[1].plot(pro.Rp,pro.DSigma_T,'C7',lw=3)
+ax[1].plot(pro.Rp,DS_NFW_1h+DS_NFW_2h,'-',color='orangered',label='NFW - $\log{M_{200}}$ = '+str(np.round(fit_NFW['lM200'],2))+', $c_{200}$ = '+str(np.round(fit_NFW['c200'],1)),lw=1.5)
+ax[1].plot(pro.Rp,DS_NFW_2h,':',color='orangered',lw=1.5)
+ax[1].plot(pro.Rp,DS_NFW_1h,'--',color='orangered',lw=1.5)
+ax[1].plot(pro.Rp,DS_Ein_1h+DS_Ein_2h,'-',color='seagreen',label='Einasto - $\log{M_{200}}$ = '+str(np.round(fit_Ein['lM200'],2))+', $c_{200}$ = '+str(np.round(fit_Ein['c200'],1))+r', $\alpha$ = '+str(np.round(fit_Ein['alpha'],1)),lw=1.5)
+ax[1].plot(pro.Rp,DS_Ein_1h,'--',color='seagreen',lw=1.5)
+ax[1].plot(pro.Rp,DS_Ein_2h,':',color='seagreen',lw=1.5)
+
+
 ax[1].set_xlabel('$r[Mpc/h]$')
 ax[1].set_ylabel(r'$\Delta \Sigma [M_\odot h/pc^2]$')
 ax[1].set_xlim([0.1,10])
 ax[1].set_ylim([2,200]) 
 ax[1].loglog()
+ax[1].legend(loc=3,frameon=False) 
 # fig.tight_layout(pad=5.0)
 fig.subplots_adjust(wspace=0.35)
 fig.savefig('../profile_stack.png',bbox_inches='tight')
