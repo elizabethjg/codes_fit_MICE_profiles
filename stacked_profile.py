@@ -15,7 +15,9 @@ lmap2 = fits.open('/home/elizabeth/maps/map_halo_subset_lr.fits')[1].data
 pro   = fits.open('/home/elizabeth/profiles/profile_halo_subset.fits')[1].data
 
 mlmap = (np.abs(lmap.xmpc) < 6.) & (np.abs(lmap.ympc) < 6.)
+mlmap2 = (np.abs(lmap2.xmpc) < 6.) & (np.abs(lmap2.ympc) < 6.)
 lmap = lmap[mlmap]
+lmap2 = lmap2[mlmap2]
 
 ides = main.row_id.astype(int)
 
@@ -237,8 +239,8 @@ ax[1].set_ylabel('$y [Mpc/h]$')
 
 ax = [fig.add_subplot(3,2,5),fig.add_subplot(3,2,6)]
 
-ax[0].scatter(lmap2.xmpc,lmap2.ympc,c=np.log10(lmap2.GT),s=200,vmin=0,vmax=2.,cmap='autumn')
-im = ax[0].scatter(lmap.xmpc,lmap.ympc,c=np.log10(lmap.GT),s=100,vmin=0,vmax=2.,cmap='autumn')
+ax[0].scatter(lmap2.xmpc,lmap2.ympc,c=np.log10(lmap2.GT),s=800,vmin=0,vmax=2.,cmap='autumn')
+im = ax[0].scatter(lmap.xmpc,lmap.ympc,c=np.log10(lmap.GT),s=50,vmin=0,vmax=2.,cmap='autumn')
 divider = make_axes_locatable(ax[0])
 cax = divider.append_axes('right', size='5%', pad=0.1)
 fig.colorbar(im, cax=cax, orientation='vertical')
