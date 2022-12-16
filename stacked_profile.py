@@ -225,18 +225,23 @@ ax[1].legend(loc=3,frameon=False)
 
 ax = [fig.add_subplot(3,2,1,projection='3d'),fig.add_subplot(3,2,3)]
 
-ax[0].plot(X,Y,Z, ',', alpha = 0.5,color='C7')
-ax[0].plot(X,Y,Z, ',', alpha = 0.05,color='seagreen')
-ax[0].plot(X,Y,Z, ',', alpha = 0.009,color='orangered')
+lim = 1.199
+m   = (abs(X) < lim) & (abs(Y) < lim) & (abs(Z) < lim)
+
+
+ax[0].plot(X[m],Y[m],Z[m], ',', alpha = 0.5,color='C7')
+ax[0].plot(X[m],Y[m],Z[m], ',', alpha = 0.04,color='seagreen')
+ax[0].plot(X[m],Y[m],Z[m], ',', alpha = 0.006,color='orangered')
 
 ax[1].plot(Xp,Yp, ',', alpha = 0.5,color='C7')
-ax[1].plot(Xp,Yp, ',', alpha = 0.05,color='seagreen')
-ax[1].plot(Xp,Yp, ',', alpha = 0.009,color='orangered')
+ax[1].plot(Xp,Yp, ',', alpha = 0.04,color='seagreen')
+ax[1].plot(Xp,Yp, ',', alpha = 0.006,color='orangered')
 
-ax[0].set_xlim([-4,4])
-ax[1].set_xlim([-5.5,5.5])
-ax[0].set_ylim([-4,4])
-ax[1].set_ylim([-4,4])
+ax[0].set_xlim([-1.2,1.2])
+ax[0].set_ylim([-1.2,1.2])
+ax[0].set_zlim([-1.2,1.2])
+ax[1].set_xlim([-1.8,1.8])
+ax[1].set_ylim([-1,1])
 
 ax[0].set_xlabel('$X [Mpc/h]$')
 ax[0].set_ylabel('$Y [Mpc/h]$')
