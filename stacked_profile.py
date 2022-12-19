@@ -8,7 +8,7 @@ from models_profiles import *
 
 # main = pd.read_csv('/home/eli/Documentos/Astronomia/proyectos/HALO-SHAPE/MICE/MICEv1.0/catalogs/halo_props2_8_5_pru_main.csv.bz2')
 # profiles = np.loadtxt('/home/eli/Documentos/Astronomia/proyectos/HALO-SHAPE/MICE/MICEv1.0/catalogs/halo_props2_8_5_pru_pro.csv.bz2',skiprows=1,delimiter=',')
-main = fits.open('../halo_subset_filt.fits')[1].data
+main = fits.open('../halo_subset.fits')[1].data
 
 lmap  = fits.open('/home/elizabeth/maps/map_halo_subset.fits')[1].data
 lmap2 = fits.open('/home/elizabeth/maps/map_halo_subset_lr.fits')[1].data
@@ -17,6 +17,14 @@ zmean  = fits.open('/home/elizabeth/profiles/profile_halo_subset.fits')[0].heade
 fit_NFW = fits.open('/home/elizabeth/profiles/fitresults_2h_2q_350_5000_profile_halo_subset.fits')[0].header
 fit_Ein = fits.open('/home/elizabeth/profiles/fitresults_2h_2q_Ein_350_5000_profile_halo_subset.fits')[0].header
 
+mfit_nfw = (main.cnfw_rho > 1.)*(main.cnfw_s > 1.)*(main.cnfw_s_e > 1.)*(main.cnfw_rho_e > 1.)*(main.lgmnfw_rho > 12)*(main.lgmnfw_s > 12)*(main.lgmnfw_s_e > 12)*(main.lgmnfw_rho_e > 12)*(main.cnfw_rho < 15)*(main.cnfw_s < 15)*(main.cnfw_s_e < 15)*(main.cnfw_rho_e < 15)
+mfit_ein = (main.cein_rho > 1.)*(main.cein_s > 1.)*(main.cein_s_e > 1.)*(main.cein_rho_e > 1.)*(main.lgmein_rho > 12)*(main.lgmein_s > 12)*(main.lgmein_s_e > 12)*(main.lgmein_rho_e > 12)*(main.cein_rho < 15)*(main.cein_s < 15)*(main.cein_s_e < 15)*(main.cein_rho_e < 15)*(main.alpha_rho > 0.)*(main.alpha_rho_e > 0.)
+m = (main.cat_x == 2)*(main.cat_y < 3)
+mfit = mfit_nfw*mfit_ein*m
+
+main = main[mfit]
+
+
 mlmap = (np.abs(lmap.xmpc) < 6.) & (np.abs(lmap.ympc) < 6.)
 mlmap2 = (np.abs(lmap2.xmpc) < 6.) & (np.abs(lmap2.ympc) < 6.)
 lmap = lmap[mlmap]
@@ -24,12 +32,12 @@ lmap2 = lmap2[mlmap2]
 
 ides = main.row_id.astype(int)
 
-offset = main.offset
+# offset = main.offset
 
 Eratio = (2.*main.ekin/abs(main.epot))
 
 
-relax = (offset < 0.1)*(Eratio < 1.35)
+relax = (Eratio < 1.35)
 
 nrings = 50
 
@@ -281,3 +289,79 @@ ax[1].legend(loc=3,frameon=False)
 fig.subplots_adjust(wspace=0.35)
 fig.savefig('../profile_stack.png',bbox_inches='tight')
 
+fig, ax = plt.subplots(2,3, figsize=(14,8))
+fig.subplots_adjust(hspace=0)
+
+mrange = np.linspace(13.5,14.5,50)
+
+ax[0,0].hist(main.lgmnfw_rho,mrange,histtype='step',lw=3,color='C1',alpha=0.5)
+ax[0,0].hist(main.lgmnfw_s,mrange,histtype='step',lw=3,color='C2',alpha=0.5)
+ax[0,0].axvline(np.log10(np.mean(10**main.lgmnfw_rho)),color='C1',lw=3,label='3D')
+ax[0,0].axvline(np.log10(np.mean(10**main.lgmnfw_s)),color='C2',lw=3,label='2D')
+ax[0,0].plot([14,14],[14,14],'k',label='Mean values')
+ax[0,0].plot([14,14],[14,14],'k--',label='Stacked fit')
+ax[0,0].plot([14,14],[14,14],'k-.',label='Lensing fit')
+ax[0,0].legend(frameon=False,loc=1)
+ax[0,0].axvline(np.log10(rhof2.M200),ls='--',color='C1',lw=3)
+ax[0,0].axvline(np.log10(Sf2.M200),ls='--',color='C2',lw=3)
+ax[0,0].axvline(fit_NFW['lM200'],ls='-.',color='C7',lw=3)
+
+ax[1,0].hist(main.lgmein_rho,mrange,histtype='step',lw=3,color='C1',alpha=0.5)
+ax[1,0].hist(main.lgmein_s,mrange,histtype='step',lw=3,color='C2',alpha=0.5)
+ax[1,0].axvline(np.log10(np.mean(10**main.lgmein_rho)),color='C1',lw=3)
+ax[1,0].axvline(np.log10(np.mean(10**main.lgmein_s)),color='C2',lw=3)
+ax[1,0].axvline(np.log10(rhof_E2.M200),ls='--',color='C1',lw=3)
+ax[1,0].axvline(np.log10(Sf_E2.M200),ls='--',color='C2',lw=3)
+ax[1,0].axvline(fit_NFW['lM200'],ls='-.',color='C7',lw=3)
+
+crange = np.linspace(0,10,50)
+
+ax[0,1].hist(main.cnfw_rho,crange,histtype='step',lw=3,color='C1',alpha=0.5)
+ax[0,1].hist(main.cnfw_s,crange,histtype='step',lw=3,color='C2',alpha=0.5)
+ax[0,1].axvline((np.mean(main.cnfw_rho)),color='C1',lw=3)
+ax[0,1].axvline((np.mean(main.cnfw_s)),color='C2',lw=3)
+ax[0,1].axvline(rhof2.c200,ls='--',color='C1',lw=3)
+ax[0,1].axvline(Sf2.c200,ls='--',color='C2',lw=3)
+ax[0,1].axvline(fit_NFW['c200'],ls='-.',color='C7',lw=3)
+     
+ax[1,1].hist(main.cein_rho,crange,histtype='step',lw=3,color='C1',alpha=0.5)
+ax[1,1].hist(main.cein_s,crange,histtype='step',lw=3,color='C2',alpha=0.5)
+ax[1,1].axvline((np.mean(main.cein_rho)),color='C1',lw=3)
+ax[1,1].axvline((np.mean(main.cein_s)),color='C2',lw=3)
+ax[1,1].axvline(rhof_E2.c200,ls='--',color='C1',lw=3)
+ax[1,1].axvline(Sf_E2.c200,ls='--',color='C2',lw=3)
+ax[1,1].axvline(fit_Ein['c200'],ls='-.',color='C7',lw=3)
+
+ax[0,2].axis('off')
+
+arange = np.linspace(0,1,50)
+
+ax[1,2].hist(main.alpha_rho,arange,histtype='step',lw=3,color='C1',alpha=0.5)
+ax[1,2].hist(main.alpha_s,arange,histtype='step',lw=3,color='C2',alpha=0.5)
+ax[1,2].axvline((np.mean(main.alpha_rho)),color='C1',lw=3)
+ax[1,2].axvline((np.mean(main.alpha_s)),color='C2',lw=3)
+ax[1,2].axvline(rhof_E2.alpha,ls='--',color='C1',lw=3)
+ax[1,2].axvline(Sf_E2.alpha,ls='--',color='C2',lw=3)
+ax[1,2].axvline(fit_Ein['alpha'],ls='-.',color='C7',lw=3)
+
+for axind in ax.flatten():
+    axind.set_ylabel('$N$')
+
+ax[1,0].set_xlabel(r'$\log (M_{200})$')
+ax[1,1].set_xlabel(r'$c_{200}$')
+ax[1,2].set_xlabel(r'$\alpha$')
+
+fig.savefig('../distributions.pdf',bbox_inches='tight')
+
+mnfw_3d = np.array([(np.mean(10**main.lgmnfw_rho)),np.mean(main.cnfw_rho)])
+mnfw_2d = np.array([(np.mean(10**main.lgmnfw_s)),np.mean(main.cnfw_s)])
+mein_3d = np.array([(np.mean(10**main.lgmein_rho)),np.mean(main.cein_rho),np.mean(main.alpha_rho)])
+mein_2d = np.array([(np.mean(10**main.lgmein_s)),np.mean(main.cein_s),np.mean(main.alpha_s)])
+
+snfw_3d = np.array([rhof2.M200,rhof2.c200])
+snfw_2d = np.array([Sf2.M200,Sf2.c200])
+sein_3d = np.array([rhof_E2.M200,rhof_E2.c200,rhof_E2.alpha])
+sein_2d = np.array([Sf_E2.M200,Sf_E2.c200,Sf_E2.alpha])
+
+lnfw    = np.array([10**fit_NFW.lM200,fit_NFW.c200])
+lein    = np.array([10**fit_Ein.lM200,fit_Ein.c200,fit_Ein.alpha])
